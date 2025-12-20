@@ -1,0 +1,44 @@
+{
+  "description": "Vantage Point Dashboard auto-update hooks",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Initialize the Vantage Point dashboard. Display: 1) Recent memories from creo-memories in left pane, 2) Current todos in main pane (or Next Actions from 'gh issue list --label next' if empty), 3) Git context (pwd, branch) in right pane."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "TodoWrite",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Update the main pane of Vantage Point dashboard with the current todo list status."
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__creo-memories__.*",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Update the left pane of Vantage Point dashboard with relevant memories."
+          }
+        ]
+      },
+      {
+        "matcher": "WebSearch|WebFetch",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Update the right pane of Vantage Point dashboard with research results summary."
+          }
+        ]
+      }
+    ]
+  }
+}
