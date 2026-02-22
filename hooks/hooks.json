@@ -1,12 +1,13 @@
 {
-  "description": "Vantage Point Dashboard auto-update hooks",
+  "description": "Vantage Point Dashboard hooks",
   "hooks": {
     "SessionStart": [
       {
         "hooks": [
           {
-            "type": "prompt",
-            "prompt": "Initialize the Vantage Point dashboard. Display: 1) Recent memories from creo-memories in left pane, 2) Current todos in main pane (or Next Actions from 'gh issue list --label next' if empty), 3) Git context (pwd, branch) in right pane."
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/session-start.sh",
+            "timeout": 5
           }
         ]
       }
