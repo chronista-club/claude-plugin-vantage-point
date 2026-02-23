@@ -45,6 +45,7 @@ Stand起動なしでも、MCPツールを使えばStandが自動起動します�
 |--------|------|
 | `open_canvas` | ネイティブCanvasウィンドウを開く |
 | `close_canvas` | Canvasウィンドウを閉じる |
+| `capture_canvas` | CanvasのスクリーンショットをPNG保存（Readツールで閲覧可能） |
 
 ### ファイル監視
 
@@ -141,6 +142,12 @@ mcp__vantage-point__split_pane({
 ```typescript
 // Canvasウィンドウを開く
 mcp__vantage-point__open_canvas()
+
+// スクリーンショットを撮影（Readツールで画像確認可能）
+mcp__vantage-point__capture_canvas({
+  path: "/tmp/screenshot.png",  // 省略時は自動生成
+  pane_id: "main"               // 省略時は全体キャプチャ
+})
 
 // 閉じる
 mcp__vantage-point__close_canvas()

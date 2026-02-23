@@ -140,6 +140,37 @@ mcp__vantage-point__close_canvas()
 
 ---
 
+### capture_canvas
+
+Canvas ウィンドウのスクリーンショットを PNG ファイルとして保存します。Canvas が起動していない場合は自動起動します。保存されたファイルは Claude の Read ツールで画像として閲覧できます。
+
+```typescript
+mcp__vantage-point__capture_canvas({
+  path: "/tmp/screenshot.png",   // オプション: 保存先パス（デフォルト: /tmp/vp-canvas-{timestamp}.png）
+  pane_id: "main"                // オプション: 特定ペインのみキャプチャ
+})
+```
+
+**パラメータ**:
+
+| パラメータ | 型 | 必須 | 説明 |
+|-----------|-----|------|------|
+| `path` | string | - | PNG ファイルの保存先パス。省略時は `/tmp/vp-canvas-{timestamp}.png` |
+| `pane_id` | string | - | 特定のペインのみキャプチャする場合のペインID |
+
+**戻り値**:
+
+```json
+{
+  "path": "/tmp/vp-canvas-20260224-123456.png",
+  "width": 1920,
+  "height": 1080,
+  "size_bytes": 123456
+}
+```
+
+---
+
 ### watch_file
 
 ログファイルを監視し、新しい行をリアルタイムでペインに表示します。
