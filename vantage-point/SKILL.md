@@ -28,7 +28,7 @@ Stand起動なしでも、MCPツールを使えばStandが自動起動します�
 
 | ツール | 用途 |
 |--------|------|
-| `show` | コンテンツを表示（markdown/html/log） |
+| `show` | コンテンツを表示（markdown/html/log/url） |
 | `clear` | ペインをクリア |
 
 ### ペイン操作
@@ -113,6 +113,17 @@ mcp__vantage-point__show({
 mcp__vantage-point__show({
   content: "<h1>タイトル</h1><p>段落</p>",
   content_type: "html"
+})
+```
+
+### URLページを埋め込み表示
+
+```typescript
+mcp__vantage-point__show({
+  content: "https://example.com",
+  content_type: "url",
+  pane_id: "right",
+  title: "Preview"
 })
 ```
 
@@ -204,6 +215,7 @@ mcp__vantage-point__clear({
 | `markdown` | Markdown形式（デフォルト） |
 | `html` | HTML形式 |
 | `log` | ログ形式（追記向け） |
+| `url` | 外部URLをiframeで埋め込み表示 |
 
 ---
 

@@ -12,7 +12,7 @@ Use the `mcp__vantage-point__show` tool with:
 
 - `content` - The content to display (markdown, HTML, or plain text)
 - `pane_id` - Target pane: "main" (default), "left", or "right"
-- `content_type` - Format: "markdown" (default), "html", or "log"
+- `content_type` - Format: "markdown" (default), "html", "log", or "url" (embed web page in iframe)
 - `append` - Set to true to append instead of replace
 
 ## Examples

@@ -19,7 +19,7 @@ Stand が起動していない場合、MCPツール呼び出し時に自動的�
 ```typescript
 mcp__vantage-point__show({
   content: "表示するコンテンツ",   // 必須
-  content_type: "markdown",        // オプション: markdown(デフォルト), html, log
+  content_type: "markdown",        // オプション: markdown(デフォルト), html, log, url
   pane_id: "main",                 // オプション: main(デフォルト), left, right, pane-*
   append: false,                   // オプション: 追記モード
   title: "タブタイトル"            // オプション: ペインのタブ表示名
@@ -31,7 +31,7 @@ mcp__vantage-point__show({
 | パラメータ | 型 | 必須 | 説明 |
 |-----------|-----|------|------|
 | `content` | string | ✓ | 表示するコンテンツ |
-| `content_type` | string | - | `markdown`(デフォルト), `html`, `log` |
+| `content_type` | string | - | `markdown`(デフォルト), `html`, `log`, `url`（iframe埋め込み） |
 | `pane_id` | string | - | `main`(デフォルト), `left`, `right`, または `split_pane` で生成されたID |
 | `append` | boolean | - | `true`で既存コンテンツに追記 |
 | `title` | string | - | ペインのタブに表示するタイトル。省略時はpane_idを使用 |
