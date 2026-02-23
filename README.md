@@ -70,12 +70,14 @@ Claude Code スラッシュコマンド:
 | `open_canvas` | ネイティブCanvasウィンドウを開く |
 | `close_canvas` | Canvasウィンドウを閉じる |
 | `restart` | Standサーバーを再起動（セッション状態は保持） |
+| `watch_file` | ログファイルをリアルタイム監視・表示 |
+| `unwatch_file` | ファイル監視を停止 |
 | `permission` | ツール実行の権限をユーザーに確認（`--permission-prompt-tool` 用） |
 
 ## Requirements
 
 - Vantage Point CLI (`vp`) がインストール済み
-- Canvas モードまたは Browser モードで Stand が起動中
+- Stand が未起動でもMCPツール呼び出し時に自動起動（v1.3.0〜）
 
 ## License
 
