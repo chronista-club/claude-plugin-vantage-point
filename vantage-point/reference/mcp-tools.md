@@ -58,11 +58,11 @@ mcp__vantage-point__clear({
 
 ### toggle_pane
 
-サイドパネルの表示/非表示を切り替えます。
+ペインの表示/非表示を切り替えます。Canvas 内の任意のペイン（`main`, `split_pane` で生成されたペイン等）に対応します。
 
 ```typescript
 mcp__vantage-point__toggle_pane({
-  pane_id: "left",   // 必須: left または right
+  pane_id: "main",   // 必須: 対象のペインID
   visible: true      // オプション: 明示的に表示/非表示を指定
 })
 ```
@@ -71,8 +71,10 @@ mcp__vantage-point__toggle_pane({
 
 | パラメータ | 型 | 必須 | 説明 |
 |-----------|-----|------|------|
-| `pane_id` | string | ✓ | `left` または `right` |
+| `pane_id` | string | ✓ | 対象のペインID（`main`, `left`, `right`, `pane-*`） |
 | `visible` | boolean | - | `true`=表示, `false`=非表示, 省略=トグル |
+
+Split レイアウト内のペインを非表示にすると、残りのペインが全幅に拡張されます。再表示で split レイアウトに復帰します。
 
 ---
 
@@ -262,28 +264,28 @@ mcp__vantage-point__permission({
 
 ## 使用シナリオ
 
-### ダッシュボード表示
+### Split + Toggle で比較表示
 
 ```typescript
-// 左パネルにメモリ一覧
-mcp__vantage-point__toggle_pane({ pane_id: "left", visible: true })
+// メインに表示
 mcp__vantage-point__show({
-  content: "## Recent Memories\n- Memory 1\n- Memory 2",
-  pane_id: "left"
-})
-
-// メインにタスク一覧
-mcp__vantage-point__show({
-  content: "## Tasks\n- [ ] Task 1\n- [x] Task 2",
+  content: "## Left Content",
   pane_id: "main"
 })
 
-// 右パネルにコンテキスト
-mcp__vantage-point__toggle_pane({ pane_id: "right", visible: true })
+// Split して右ペインに表示
+mcp__vantage-point__split_pane({ direction: "horizontal" })
+// → "pane-abc12345"
 mcp__vantage-point__show({
-  content: "## Context\n- Branch: main\n- CWD: /project",
-  pane_id: "right"
+  content: "## Right Content",
+  pane_id: "pane-abc12345"
 })
+
+// 右ペインを一時的に非表示（main が全幅に）
+mcp__vantage-point__toggle_pane({ pane_id: "pane-abc12345", visible: false })
+
+// 再表示（split レイアウト復帰）
+mcp__vantage-point__toggle_pane({ pane_id: "pane-abc12345", visible: true })
 ```
 
 ### ログストリーミング
