@@ -4,7 +4,7 @@
 
 Vantage Pointは、Claude Codeセッション中にMarkdown、HTML、ログをブラウザウィンドウやネイティブCanvasに表示するMCPサーバーです。
 
-Stand（バックエンド）が起動していなくても、MCPツールを呼ぶと自動的にStandが起動します。
+Process（バックエンド）が起動していなくても、MCPツールを呼ぶと自動的にProcessが起動します。
 
 ---
 
@@ -18,7 +18,7 @@ vp start
 vp config
 ```
 
-Stand起動なしでも、MCPツールを使えばStandが自動起動します。
+Process起動なしでも、MCPツールを使えばProcessが自動起動します。
 
 ---
 
@@ -53,6 +53,15 @@ Stand起動なしでも、MCPツールを使えばStandが自動起動します�
 |--------|------|
 | `watch_file` | ログファイルをリアルタイム監視・表示 |
 | `unwatch_file` | ファイル監視を停止 |
+
+### Ruby VM（Heaven's Door）
+
+| ツール | 用途 |
+|--------|------|
+| `eval_ruby` | Rubyコード/ファイルを実行し結果を表示（短命実行） |
+| `run_ruby` | Rubyコード/ファイルをデーモンプロセスとして起動（長時間実行） |
+| `stop_ruby` | 実行中のRubyデーモンプロセスを停止 |
+| `list_ruby` | 実行中のRubyデーモンプロセス一覧を表示 |
 
 ### システム
 
@@ -186,6 +195,38 @@ mcp__vantage-point__watch_file({
 // 監視を停止
 mcp__vantage-point__unwatch_file({
   pane_id: "right"
+})
+```
+
+### Ruby VM
+
+```typescript
+// コードを直接実行（短命）
+mcp__vantage-point__eval_ruby({
+  code: "puts 'Hello from Ruby!'\nputs 1 + 2",
+  pane_id: "main"
+})
+
+// ファイルを実行（短命）
+mcp__vantage-point__eval_ruby({
+  file: "scripts/analyze.rb",
+  pane_id: "right"
+})
+
+// デーモンとして起動（長時間実行、出力ストリーミング）
+mcp__vantage-point__run_ruby({
+  code: "loop { puts Time.now; sleep 1 }",
+  name: "clock",
+  pane_id: "right"
+})
+// → process_id "rb-0001" が返る
+
+// 実行中プロセス一覧
+mcp__vantage-point__list_ruby()
+
+// デーモンを停止
+mcp__vantage-point__stop_ruby({
+  process_id: "rb-0001"
 })
 ```
 

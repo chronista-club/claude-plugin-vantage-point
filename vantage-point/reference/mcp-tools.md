@@ -6,7 +6,7 @@ Vantage Pointはブラウザビューアやネイティブ Canvas にリッチ�
 
 **MCPサーバー名**: `vantage-point`
 
-Stand が起動していない場合、MCPツール呼び出し時に自動的に Stand を起動します（自動起動リレー）。
+Process が起動していない場合、MCPツール呼び出し時に自動的に Process を起動します（自動起動リレー）。
 
 ---
 
@@ -221,6 +221,88 @@ mcp__vantage-point__unwatch_file({
 
 ---
 
+### eval_ruby
+
+Rubyコードまたはファイルを実行し、結果をペインに表示します。短命実行（スクリプト、データ処理）向け。
+
+```typescript
+mcp__vantage-point__eval_ruby({
+  code: "puts 'Hello'",    // code または file のどちらか必須
+  file: "scripts/run.rb",  // code と排他
+  pane_id: "main"           // オプション: 結果の表示先ペイン
+})
+```
+
+**パラメータ**:
+
+| パラメータ | 型 | 必須 | 説明 |
+|-----------|-----|------|------|
+| `code` | string | △ | 実行するRubyコード（`file` と排他） |
+| `file` | string | △ | 実行するRubyファイルパス（プロジェクトディレクトリ相対、`code` と排他） |
+| `pane_id` | string | - | 結果の表示先ペインID（デフォルト: `main`） |
+
+**戻り値**: stdout, stderr, exit_code, 実行時間を含むテキスト。
+
+---
+
+### run_ruby
+
+Rubyコードまたはファイルをデーモンプロセスとして起動します。出力はペインにリアルタイムストリーミングされます。
+
+```typescript
+mcp__vantage-point__run_ruby({
+  code: "loop { puts Time.now; sleep 1 }",  // code または file のどちらか必須
+  file: "scripts/server.rb",                 // code と排他
+  name: "my-server",                         // オプション: プロセス表示名
+  pane_id: "right"                           // オプション: 出力先ペイン
+})
+```
+
+**パラメータ**:
+
+| パラメータ | 型 | 必須 | 説明 |
+|-----------|-----|------|------|
+| `code` | string | △ | デーモンとして実行するRubyコード（`file` と排他） |
+| `file` | string | △ | デーモンとして実行するRubyファイルパス（`code` と排他） |
+| `name` | string | - | プロセスの表示名（デフォルト: ファイル名 or `daemon`） |
+| `pane_id` | string | - | 出力ストリーミング先ペインID（デフォルト: `main`） |
+
+**戻り値**: プロセスID（`rb-0001` 形式）。`stop_ruby` で停止に使用。
+
+---
+
+### stop_ruby
+
+実行中のRubyデーモンプロセスを停止します。
+
+```typescript
+mcp__vantage-point__stop_ruby({
+  process_id: "rb-0001"   // 必須: 停止するプロセスID
+})
+```
+
+**パラメータ**:
+
+| パラメータ | 型 | 必須 | 説明 |
+|-----------|-----|------|------|
+| `process_id` | string | ✓ | 停止するRubyプロセスID（`list_ruby` で確認可能） |
+
+---
+
+### list_ruby
+
+実行中のRubyデーモンプロセス一覧を表示します。
+
+```typescript
+mcp__vantage-point__list_ruby()
+```
+
+**パラメータ**: なし
+
+**戻り値**: プロセスID、名前、ペインID、ステータスの一覧。
+
+---
+
 ### restart
 
 Vantage Pointサーバーを再起動します。セッション状態は保持されます。
@@ -325,4 +407,27 @@ mcp__vantage-point__watch_file({
 // 監視を停止して閉じる
 mcp__vantage-point__unwatch_file({ pane_id: "pane-abc12345" })
 mcp__vantage-point__close_pane({ pane_id: "pane-abc12345" })
+```
+
+### Ruby VM でデータ処理
+
+```typescript
+// Rubyスクリプトを実行してCanvasに結果表示
+mcp__vantage-point__eval_ruby({
+  code: "require 'json'\ndata = {a: 1, b: 2}\nputs JSON.pretty_generate(data)",
+  pane_id: "right"
+})
+
+// 長時間実行のサーバーを起動
+mcp__vantage-point__run_ruby({
+  file: "scripts/watcher.rb",
+  name: "file-watcher",
+  pane_id: "right"
+})
+
+// プロセス一覧で確認
+mcp__vantage-point__list_ruby()
+
+// 停止
+mcp__vantage-point__stop_ruby({ process_id: "rb-0001" })
 ```
