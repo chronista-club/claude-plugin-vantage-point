@@ -265,10 +265,12 @@ mcp__vantage-point__clear({
 
 | タイプ | 説明 |
 |--------|------|
-| `markdown` | Markdown形式（デフォルト） |
-| `html` | HTML形式 |
+| `markdown` | Markdown形式（**デフォルト・推奨**） |
+| `html` | HTML形式（精密なレイアウトが必要な場合のみ） |
 | `log` | ログ形式（追記向け） |
 | `url` | 外部URLをiframeで埋め込み表示 |
+
+> **ベストプラクティス**: `show` では `content_type='markdown'` をデフォルトとして使用してください。Markdown は Canvas で見やすく描画されます。`html` は精密なビジュアルレイアウト（ダッシュボード、色付きダイアグラム、インタラクティブ要素）が必要な場合にのみ使用します。
 
 ---
 

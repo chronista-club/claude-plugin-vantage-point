@@ -1,7 +1,7 @@
 {
   "name": "vantage-point",
   "description": "Rich dashboard display for Claude Code - show memories, todos, context, and research results",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "author": {
     "name": "Chronista Club",
     "url": "https://github.com/chronista-club"
