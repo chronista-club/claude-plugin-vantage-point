@@ -63,6 +63,14 @@ Process起動なしでも、MCPツールを使えばProcessが自動起動しま
 | `stop_ruby` | 実行中のRubyデーモンプロセスを停止 |
 | `list_ruby` | 実行中のRubyデーモンプロセス一覧を表示 |
 
+### tmux 統合
+
+| ツール | 用途 |
+|--------|------|
+| `tmux_split` | tmux ウィンドウを分割して新ペインを作成 |
+| `tmux_capture` | tmux ペインのターミナル出力をテキスト取得 |
+| `tmux_dashboard` | 全 tmux ペインを Canvas にダッシュボード表示 |
+
 ### システム
 
 | ツール | 用途 |

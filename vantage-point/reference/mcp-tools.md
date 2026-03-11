@@ -303,6 +303,62 @@ mcp__vantage-point__list_ruby()
 
 ---
 
+### tmux_split
+
+tmux ウィンドウを分割して新しいペインを作成します。worker 起動や並列 Claude Code セッション作成に使います。
+
+```typescript
+mcp__vantage-point__tmux_split({
+  horizontal: true,                        // オプション: 水平分割(true, デフォルト) or 垂直分割(false)
+  command: "claude --dangerously-skip-permissions"  // オプション: 新ペインで実行するコマンド
+})
+```
+
+**パラメータ**:
+
+| パラメータ | 型 | 必須 | 説明 |
+|-----------|-----|------|------|
+| `horizontal` | boolean | - | `true`(デフォルト)=水平分割, `false`=垂直分割 |
+| `command` | string | - | 新しいペインで実行するコマンド。省略時はデフォルトシェル |
+
+**戻り値**: 新しいペインID（例: `%1`）とコマンド名。
+
+---
+
+### tmux_capture
+
+tmux ペインのターミナル出力をテキストとしてキャプチャします。AI エージェントが他のペインの状態を把握するのに使います。
+
+```typescript
+mcp__vantage-point__tmux_capture({
+  pane_id: "%0"    // オプション: ペインID。省略すると全ペインをキャプチャ
+})
+```
+
+**パラメータ**:
+
+| パラメータ | 型 | 必須 | 説明 |
+|-----------|-----|------|------|
+| `pane_id` | string | - | tmux ペインID（例: `%0`）。省略時は全ペインをキャプチャ |
+
+**戻り値**: 各ペインのID・コマンド名・ターミナル出力テキスト。
+
+---
+
+### tmux_dashboard
+
+全 tmux ペインをキャプチャして Canvas に markdown ダッシュボードとして表示します。並列ワーカーの監視に最適です。
+
+```typescript
+mcp__vantage-point__tmux_dashboard()
+```
+
+**パラメータ**: なし
+
+**戻り値**: Canvas に表示されたペイン数。
+
+---
+
 ### restart
 
 Vantage Pointサーバーを再起動します。セッション状態は保持されます。
@@ -407,6 +463,23 @@ mcp__vantage-point__watch_file({
 // 監視を停止して閉じる
 mcp__vantage-point__unwatch_file({ pane_id: "pane-abc12345" })
 mcp__vantage-point__close_pane({ pane_id: "pane-abc12345" })
+```
+
+### tmux で並列ワーカー管理
+
+```typescript
+// 新しいペインを作成して Claude Code を起動
+mcp__vantage-point__tmux_split({
+  horizontal: true,
+  command: "claude --dangerously-skip-permissions"
+})
+// → "New pane created: %1 (claude)"
+
+// 全ペインの出力を確認
+mcp__vantage-point__tmux_capture()
+
+// Canvas にダッシュボードとして可視化
+mcp__vantage-point__tmux_dashboard()
 ```
 
 ### Ruby VM でデータ処理
