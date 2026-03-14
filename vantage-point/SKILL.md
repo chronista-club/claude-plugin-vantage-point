@@ -71,6 +71,26 @@ Process起動なしでも、MCPツールを使えばProcessが自動起動しま
 | `tmux_capture` | tmux ペインのターミナル出力をテキスト取得 |
 | `tmux_dashboard` | 全 tmux ペインを Canvas にダッシュボード表示 |
 
+### Canvas Lane 切り替え
+
+| ツール | 用途 |
+|--------|------|
+| `switch_lane` | Canvas の表示プロジェクトを切り替え |
+
+### tmux エージェント管理
+
+| ツール | 用途 |
+|--------|------|
+| `tmux_agent_deploy` | Stand エージェントを新しい tmux ペインにデプロイ |
+| `tmux_agent_status` | デプロイ済みエージェント一覧を表示 |
+| `tmux_agent_send` | エージェントにテキストコマンドを送信 |
+
+### スクリーンショット
+
+| ツール | 用途 |
+|--------|------|
+| `capture_terminal` | VantagePoint.app のターミナルウィンドウを PNG キャプチャ |
+
 ### システム
 
 | ツール | 用途 |

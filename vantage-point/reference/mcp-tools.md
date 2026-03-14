@@ -359,6 +359,96 @@ mcp__vantage-point__tmux_dashboard()
 
 ---
 
+### switch_lane
+
+Canvas の表示プロジェクト（Lane）を切り替えます。
+
+```typescript
+mcp__vantage-point__switch_lane({
+  lane: "vantage-point"   // 必須: 切り替え先のプロジェクト名
+})
+```
+
+**パラメータ**:
+
+| パラメータ | 型 | 必須 | 説明 |
+|-----------|-----|------|------|
+| `lane` | string | ✓ | プロジェクト名（例: `vantage-point`, `creo-memories`） |
+
+---
+
+### capture_terminal
+
+VantagePoint.app のターミナルウィンドウを PNG スクリーンショットとして保存します。保存されたファイルは Claude の Read ツールで画像として閲覧できます。
+
+```typescript
+mcp__vantage-point__capture_terminal({
+  path: "/tmp/vp-terminal.png"   // オプション: 保存先パス
+})
+```
+
+**パラメータ**:
+
+| パラメータ | 型 | 必須 | 説明 |
+|-----------|-----|------|------|
+| `path` | string | - | PNG ファイルの保存先パス。省略時は `/tmp/vp-terminal-{timestamp}.png` |
+
+---
+
+### tmux_agent_deploy
+
+Stand エージェント（Moody Blues, Sticky Fingers 等）を新しい tmux ペインにデプロイします。
+
+```typescript
+mcp__vantage-point__tmux_agent_deploy({
+  label: "Moody Blues",                                      // 必須: エージェントラベル
+  command: "claude --dangerously-skip-permissions",          // オプション: 実行コマンド
+  task_description: "PR #42 のコードレビュー"                // オプション: タスク説明
+})
+```
+
+**パラメータ**:
+
+| パラメータ | 型 | 必須 | 説明 |
+|-----------|-----|------|------|
+| `label` | string | ✓ | エージェント名（例: `Moody Blues`, `Sticky Fingers`） |
+| `command` | string | - | 新ペインで実行するコマンド |
+| `task_description` | string | - | エージェントが実行するタスクの説明 |
+
+---
+
+### tmux_agent_status
+
+デプロイ済みの Stand エージェント一覧を表示します。
+
+```typescript
+mcp__vantage-point__tmux_agent_status()
+```
+
+**パラメータ**: なし
+
+---
+
+### tmux_agent_send
+
+デプロイ済みエージェントにテキストコマンドを送信します。
+
+```typescript
+mcp__vantage-point__tmux_agent_send({
+  pane_id: "%1",           // 必須: 送信先 tmux ペイン ID
+  text: "レビューを開始"    // 必須: 送信テキスト
+})
+```
+
+**パラメータ**:
+
+| パラメータ | 型 | 必須 | 説明 |
+|-----------|-----|------|------|
+| `pane_id` | string | ✓ | tmux ペイン ID（例: `%1`） |
+| `text` | string | ✓ | 送信するテキスト |
+
+---
+
 ### restart
 
 Vantage Pointサーバーを再起動します。セッション状態は保持されます。
