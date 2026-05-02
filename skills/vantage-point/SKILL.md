@@ -1,3 +1,15 @@
+---
+name: vantage-point
+description: AI ネイティブ開発環境 — Canvas 視覚化、並列 worker 展開、inter-agent 通信を実現する MCP server。Claude Code 用 dashboard tool
+version: 0.15.2
+tags:
+  - dashboard
+  - canvas
+  - tmux
+  - mcp
+  - inter-agent
+---
+
 # Vantage Point
 
 > **AI ネイティブ開発環境** — Claude Code セッション中に Canvas 視覚化、 並列 worker 展開、 inter-agent 通信を実現する MCP server。
