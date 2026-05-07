@@ -1,7 +1,7 @@
 ---
 name: vantage-point
 description: AI ネイティブ開発環境 — Canvas 視覚化、並列 worker 展開、inter-agent 通信を実現する MCP server。Claude Code 用 dashboard tool
-version: 0.15.2
+version: 0.17.0
 tags:
   - dashboard
   - canvas
@@ -103,19 +103,20 @@ mcp__vantage-point__capture_terminal
 
 ---
 
-## MCP Tools 一覧 (28 個、 Phase 5-D 2026-04-28 状態)
+## MCP Tools 一覧 (35 個、 v0.17.0 / 2026-05-08 状態)
 
 ### Display / Canvas (Paisley Park 🧭)
 
 | Tool | 用途 |
 |------|------|
-| `show` | コンテンツ表示 (markdown/html/log/url) |
+| `show` | コンテンツ表示 (markdown/html/log/url)、 v0.17.0 で show-subscriber 経由 PP body markdown 表示が landing |
 | `clear` | pane content clear |
 | `toggle_pane` | left/right pane 表示切替 |
 | `close_pane` | pane を閉じる |
 | `switch_lane` | Canvas の表示プロジェクト切替 |
 | `watch_file` | ログ file をリアルタイム表示 (JSON Lines / plain text) |
 | `unwatch_file` | 監視停止 |
+| `list_lanes` | project 内 Lane 一覧取得 (Lead + Worker、 Frame Engine 連動) |
 
 ### tmux 並列開発 (Hermit Purple 🍇)
 
@@ -151,6 +152,13 @@ mcp__vantage-point__capture_terminal
 | `permission` | tool 実行 permission 要求 (user 確認 dialog) |
 | `restart` | VP Process restart (session 状態保持) |
 
+### Worker workspace (Whitesnake 🐍 連動)
+
+| Tool | 用途 |
+|------|------|
+| `add_worker` | Worker workspace を spawn (branch + ahead-behind + dirty 状態 sidebar 表示) |
+| `delete_worker` | Worker workspace を片付け (merge 確認・dirty 警告込み) |
+
 ### Msgbox (inter-agent 通信、 旧 ccwire 置換)
 
 | Tool | 用途 |
@@ -177,16 +185,17 @@ mcp__vantage-point__capture_terminal
 ## アーキテクチャ概要
 
 ```
-TheWorld 👑 (32000) — 常駐 daemon、 全 SP を管理
+TheWorld 👑 (32000) — 常駐 daemon、 全 SP + HP を管理
+  │
+  ├── Hermit Purple 🍇            — External Control (MIDI / tmux / MCP) ← LSCM PR-α で World 階層に物理移管
   │
   └── Star Platinum ⭐ (project SP, 33xxx) — Project 単位の容器
-        ├── HD 📖 Heaven's Door     — Coding Assistant (Claude CLI / 任意 LLM)
-        ├── PP 🧭 Paisley Park       — Information Navigator (Canvas / WebView)
-        ├── GE 🌿 Gold Experience   — Code Runner (Ruby VM)
-        ├── HP 🍇 Hermit Purple      — External Control (MIDI / tmux / MCP)
+        ├── Echoes 💬 (旧 HD)        — Coding Assistant (Claude CLI / 任意 LLM、 v0.17.0 で `Heaven's Door 📖` から rename)
+        ├── Paisley Park 🧭          — Information Navigator (Canvas / WebView、 v0.17.0 で Lane 階層に物理移管 + Frame Engine)
+        ├── Gold Experience 🌿       — Code Runner (Ruby VM)
         └── (per slot) Lane          — PTY セッション (Lead + Worker)
-              ├── TH 🤚 The Hand    — 素 shell base
-              └── HD 📖 Heaven's Door — 任意 LLM auto-launch (Phase 6-E)
+              ├── The Hand 🤚        — 素 shell base
+              └── Echoes 💬          — 任意 LLM auto-launch (init_script 駆動、 doc 11)
 ```
 
 詳細メンタルモデル: `mem_1CaVnfJRgWtuRgZD9yQSoV` (舞台-役者-演目)
@@ -244,7 +253,19 @@ Canvas は **タブ付き統合ウィンドウ**。 各タブが project を表�
 
 ---
 
-## Phase 5-D 以降の変更点 (2026-04-28)
+## Phase 5-D 以降の変更点
+
+### v0.17.0 (2026-05-08): Frame Engine + Live Token + B 達成
+
+- **3D Frame Layout Engine** (PR-ε-1, #292): Pane を「subdivision」 ではなく **portable 3D オブジェクト** として inversion。 4 default Scene (lead-focus / side-review / pp-overlay / pp-focus) + Ctrl+Shift+1..4 で切替、 ]/[ で cycle
+- **PP body markdown 表示 = B 達成** (PR-ε-3, #298): `mcp__show` → state.hub.broadcast → `/ws` → show-subscriber → `vpPP.renderPP` → `#pp-content innerHTML` の 6 段 pipeline 物理化。 doc 13 「PP は Information Router」 概念の最 minimal 実装が landing
+- **Live Token pattern** 体系化 (#300, #301): `--frame-transition-ms` で確立した CSS variable + MutationObserver pattern を terminal 5 token (fontSize / line-height / letter-spacing / font-family / cursor-style) に展開、 creo-ui-editor-host から runtime 編集可能
+- **per-Lane Scene state preservation** (#294): Lane 切替で Scene layout を維持 (`Map<LaneAddress, SceneId>`)
+- **deps upgrade**: Rust 1.94 → 1.95 + 13 crate latest bump (#296) + rmcp 0.16 → 1.6 (#297)
+- **DX flush** (#295): mise task `vp:*` → `app:*` rename、 daemon:start 完全 background detach、 cargo install --path で codesigned binary を `~/.cargo/bin/` 配置
+- **vp mcp critical fix** (#302): `port_roles` tool の inputSchema を schemars 1.x `{const:null}` 拒否対応 (rmcp 1.6 strict validation 適合)
+
+### Phase 5-D (2026-04-28)
 
 - **Worker workspace lifecycle UI**: sidebar の Worker 行に branch / ahead-behind / dirty / merged の git 状態を inline 表示
 - **dual-stack listen**: TheWorld + SP が IPv4 + IPv6 両対応 (`http://[::1]:32000` も使える)

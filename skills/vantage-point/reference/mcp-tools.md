@@ -78,28 +78,6 @@ Split レイアウト内のペインを非表示にすると、残りのペイ�
 
 ---
 
-### split_pane
-
-既存のペインを水平または垂直に分割し、新しいペインを作成します。
-
-```typescript
-mcp__vantage-point__split_pane({
-  direction: "vertical",      // 必須: horizontal または vertical
-  source_pane_id: "main"      // オプション: 分割元のペインID（デフォルト: main）
-})
-```
-
-**パラメータ**:
-
-| パラメータ | 型 | 必須 | 説明 |
-|-----------|-----|------|------|
-| `direction` | string | ✓ | `horizontal`(`h`) または `vertical`(`v`) |
-| `source_pane_id` | string | - | 分割元のペインID（デフォルト: `main`） |
-
-**戻り値**: 新しいペインIDが返されます（`pane-xxxxxxxx` 形式）。このIDを `show` の `pane_id` に指定してコンテンツを表示できます。
-
----
-
 ### close_pane
 
 ペインを閉じます。
@@ -115,30 +93,6 @@ mcp__vantage-point__close_pane({
 | パラメータ | 型 | 必須 | 説明 |
 |-----------|-----|------|------|
 | `pane_id` | string | ✓ | 閉じるペインのID |
-
----
-
-### open_canvas
-
-ネイティブWebViewウィンドウ（Canvas）を開きます。ブラウザビューアと同じコンテンツを表示します。
-
-```typescript
-mcp__vantage-point__open_canvas()
-```
-
-**パラメータ**: なし
-
----
-
-### close_canvas
-
-Canvasウィンドウを閉じます。
-
-```typescript
-mcp__vantage-point__close_canvas()
-```
-
-**パラメータ**: なし
 
 ---
 
@@ -490,30 +444,99 @@ mcp__vantage-point__permission({
 
 ---
 
-## 使用シナリオ
+### add_worker / delete_worker (v0.17.0)
 
-### Split + Toggle で比較表示
+Worker workspace の lifecycle 管理。 `ccws` (clone-based isolated workspace) を MCP 経由で操作。
 
 ```typescript
-// メインに表示
-mcp__vantage-point__show({
-  content: "## Left Content",
-  pane_id: "main"
+mcp__vantage-point__add_worker({
+  name: "feature-x",        // 必須: workspace 名 (Lane address 一部)
+  branch: "mako/feature-x"  // オプション: 起動 branch
 })
 
-// Split して右ペインに表示
-mcp__vantage-point__split_pane({ direction: "horizontal" })
-// → "pane-abc12345"
-mcp__vantage-point__show({
-  content: "## Right Content",
-  pane_id: "pane-abc12345"
+mcp__vantage-point__delete_worker({
+  name: "feature-x",        // 必須
+  force: false              // オプション: dirty/unmerged を上書き削除
 })
+```
 
-// 右ペインを一時的に非表示（main が全幅に）
-mcp__vantage-point__toggle_pane({ pane_id: "pane-abc12345", visible: false })
+**戻り値 (`add_worker`)**: spawn された Lane address、 path、 状態 (branch/ahead-behind/dirty)。
 
-// 再表示（split レイアウト復帰）
-mcp__vantage-point__toggle_pane({ pane_id: "pane-abc12345", visible: true })
+---
+
+### list_lanes (v0.17.0)
+
+project 内の Lane 一覧取得 (Lead + Worker)。 sidebar UI / Frame Engine の lookup と整合。
+
+```typescript
+mcp__vantage-point__list_lanes()
+```
+
+**戻り値**: Lane address・branch・git 状態 (ahead-behind/dirty/merged) の配列。
+
+---
+
+### msg_* (Msgbox / inter-agent 通信、 旧 ccwire 置換)
+
+actor address `{actor}@{project}` 形式で project 跨ぎ通信。 `mem_1CaBRBdh1PGop2iGLAnwSY` 参照。
+
+| Tool | 主要パラメータ | 用途 |
+|------|---------------|------|
+| `msg_send` | `address`, `message`, `manual_ack?`, `reply_to?` | 送信 (default fire-and-forget、 `manual_ack: true` で persistent) |
+| `msg_recv` | `timeout?`, `actor?` | 受信 (default 0s 即時、 timeout 指定で blocking poll) |
+| `msg_ack` | `message_id` | manual_ack message を ack (persistent message のみ) |
+| `msg_broadcast` | `message`, `actor_filter?` | 全 peer に broadcast (best-effort) |
+| `msg_thread` | `message_id` | reply_to chain 全体取得 (persistent message のみ) |
+| `msg_peers` | (なし) | 同 process の addresses |
+| `msg_directory` | (なし) | 全 process の actor 一覧 (TheWorld registry 経由) |
+
+```typescript
+// 代表例: send + recv
+mcp__vantage-point__msg_send({
+  address: "agent@creo-memories",
+  message: "review request"
+})
+mcp__vantage-point__msg_recv({ timeout: 10 })
+```
+
+---
+
+### port_* (Port 管理、 slot × lane × role 決定論)
+
+| Tool | 主要パラメータ | 用途 |
+|------|---------------|------|
+| `port_show` | `slot`, `lane`, `role` | port 番号を計算 (deterministic) |
+| `port_url` | `slot`, `lane`, `role` | localhost URL を生成 (`http://localhost:{port}`) |
+| `port_roles` | (なし) | role → offset table (`agent`/`dev_server`/`db_admin`/`canvas`/`preview`) |
+| `port_layout` | `slot` | 1 slot の全 port 配置を Markdown 表で取得 |
+
+```typescript
+mcp__vantage-point__port_show({ slot: 0, lane: "lead", role: "dev_server" })
+// → { port: 33010, ... }
+```
+
+---
+
+## 使用シナリオ
+
+### Frame Engine Scene 切替 (v0.17.0)
+
+```typescript
+// PP body markdown を表示 (B 達成 pipeline)
+mcp__vantage-point__show({
+  content: "# 進捗\n- A 完了\n- B 着手",
+  pane_id: "main",
+  content_type: "markdown"
+})
+// → show-subscriber 経由で vpPP.renderPP に届き、 #pp-content に innerHTML 反映
+
+// Frame Engine Scene の切替は vp-app の keyboard shortcut:
+//   Ctrl+Shift+1 → lead-focus
+//   Ctrl+Shift+2 → side-review
+//   Ctrl+Shift+3 → pp-overlay
+//   Ctrl+Shift+4 → pp-focus
+//   Ctrl+Shift+] / [ → cycle
+// Lane 切替で per-Lane Scene state が保持される。
 ```
 
 ### ログストリーミング
