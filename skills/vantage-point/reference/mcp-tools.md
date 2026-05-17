@@ -446,7 +446,7 @@ mcp__vantage-point__permission({
 
 ### add_worker / delete_worker (v0.17.0)
 
-Worker workspace の lifecycle 管理。 `ccws` (clone-based isolated workspace) を MCP 経由で操作。
+Worker lane の lifecycle 管理。 lane (clone-based isolated workspace) を MCP 経由で操作。
 
 ```typescript
 mcp__vantage-point__add_worker({
