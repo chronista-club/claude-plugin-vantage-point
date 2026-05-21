@@ -476,27 +476,59 @@ mcp__vantage-point__list_lanes()
 
 ---
 
-### msg_* (Msgbox / inter-agent 通信、 旧 ccwire 置換)
+### wire_* (wiremsg / inter-agent 通信、 ccwire / msgbox 廃止 → wiremsg に一本化)
 
-actor address `{actor}@{project}` 形式で project 跨ぎ通信。 `mem_1CaBRBdh1PGop2iGLAnwSY` 参照。
+wire address で project 跨ぎ通信。 address は `agent@<project>` (lead) / `agent@<project>/<lane>` (wing) 形式、
+`notify@<project>` 等の actor slot もある。 thread は `prev` parent-pointer で表現される (`thread_id` は無い)。
 
 | Tool | 主要パラメータ | 用途 |
 |------|---------------|------|
-| `msg_send` | `address`, `message`, `manual_ack?`, `reply_to?` | 送信 (default fire-and-forget、 `manual_ack: true` で persistent) |
-| `msg_recv` | `timeout?`, `actor?` | 受信 (default 0s 即時、 timeout 指定で blocking poll) |
-| `msg_ack` | `message_id` | manual_ack message を ack (persistent message のみ) |
-| `msg_broadcast` | `message`, `actor_filter?` | 全 peer に broadcast (best-effort) |
-| `msg_thread` | `message_id` | reply_to chain 全体取得 (persistent message のみ) |
-| `msg_peers` | (なし) | 同 process の addresses |
-| `msg_directory` | (なし) | 全 process の actor 一覧 (TheWorld registry 経由) |
+| `wire_send` | `to`, `body`, `reply_to?` | 送信。 `reply_to` なし = 新規 thread の root、 あり = その thread への reply (reply-all 展開) |
+| `wire_recv` | `timeout?` | 自分が参加する全 wire thread の未読 message を受信 (読むと cursor 前進し再配信されない) |
+| `wire_thread` | `message_id` | 指定 message から `prev` を root まで辿った系譜 (ancestor-chain、 root-first) を取得。 cursor は触らない |
+
+**パラメータ詳細**:
+
+| Tool | パラメータ | 型 | 必須 | 説明 |
+|------|-----------|-----|------|------|
+| `wire_send` | `to` | string[] | ✓ | 宛先 wire address の配列 (例: `["agent@vantage-point"]`) |
+| `wire_send` | `body` | object | ✓ | message 本文 (JSON object) |
+| `wire_send` | `reply_to` | string | - | reply 時に親 message の id。 省略すると新規 thread の root |
+| `wire_recv` | `timeout` | number | - | 待機秒数 (default 5 / max 30) |
+| `wire_thread` | `message_id` | string | ✓ | 系譜を辿る起点の message id |
+
+`wire_recv` が返す各 message のフィールド: `id` / `prev` / `from` / `to` / `body` / `created_at` / `local_seq`。
 
 ```typescript
 // 代表例: send + recv
-mcp__vantage-point__msg_send({
-  address: "agent@creo-memories",
-  message: "review request"
+mcp__vantage-point__wire_send({
+  to: ["agent@creo-memories"],
+  body: { text: "review request" }
 })
-mcp__vantage-point__msg_recv({ timeout: 10 })
+mcp__vantage-point__wire_recv({ timeout: 10 })
+
+// reply: 受信した message の id を reply_to に渡す (同 thread に reply-all 展開)
+mcp__vantage-point__wire_send({
+  to: ["agent@creo-memories"],
+  body: { text: "了解、 着手します" },
+  reply_to: "<受信 message の id>"
+})
+
+// thread の系譜を遡る (cursor は触らない、 backlog 取得用)
+mcp__vantage-point__wire_thread({ message_id: "<message id>" })
+```
+
+CLI 経由でも利用可能:
+
+```bash
+# 自分宛の wire thread を watch
+vp wire watch --url <SP> --agent <wire-address> [--timeout N]
+
+# 送信
+vp wire send --url <SP> --to <addr> --body <text> [--from F] [--reply-to ID]
+
+# supervised watch
+vp wire watch-supervised
 ```
 
 ---

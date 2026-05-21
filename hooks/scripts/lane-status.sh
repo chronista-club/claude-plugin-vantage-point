@@ -2,7 +2,7 @@
 # SessionStart hook: VP lane (worker 環境) の状態をセッション開始時にコンテキスト注入
 # vp CLI が使えない場合は静かに終了する
 #
-# 旧 ccnav plugin の session-start.sh を統合・現行化 (ccws → vp lane、 ccwire → Mailbox)。
+# 旧 ccnav plugin の session-start.sh を統合・現行化 (ccws → vp lane、 ccwire → wiremsg)。
 
 set -euo pipefail
 

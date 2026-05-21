@@ -18,7 +18,7 @@ VP は単なる「ブラウザビューア」 ではなく、 開発体験その
 
 1. **Canvas** で markdown / HTML / URL / ログを視覚化 (Paisley Park 🧭)
 2. **tmux 統合** で並列 worker / agent を展開・監視 (Hermit Purple 🍇)
-3. **Msgbox** で project 跨ぎ inter-agent 通信 (旧 ccwire 置換)
+3. **wiremsg** で project 跨ぎ inter-agent 通信 (ccwire / msgbox は廃止、 wiremsg に一本化)
 4. **Port 管理** で project slot × lane × role の決定論的 port 配置
 5. **Screenshot** で UI 状態を PNG 化、 Read tool で AI が視認
 
@@ -74,23 +74,25 @@ mcp__vantage-point__tmux_capture
 
 `tmux_dashboard` で全 pane を Canvas markdown dashboard 化、 worker 進捗を 1 view で監視。
 
-### 4. project 跨ぎ inter-agent 通信 (Msgbox)
+### 4. project 跨ぎ inter-agent 通信 (wiremsg)
 
 ```
-# 全 actor 一覧
-mcp__vantage-point__msg_directory
+# 送信 (reply_to なし = 新規 thread の root)
+mcp__vantage-point__wire_send
+  to: ["agent@creo-memories"]
+  body: { "text": "review request" }
 
-# 送信
-mcp__vantage-point__msg_send
-  address: "agent@creo-memories"
-  message: "..."
-
-# 受信 (timeout 待ち)
-mcp__vantage-point__msg_recv
+# 受信 (自分が参加する全 wire thread の未読 message、 timeout 待ち)
+mcp__vantage-point__wire_recv
   timeout: 10
+
+# thread 系譜の取得 (指定 message から prev を root まで辿る)
+mcp__vantage-point__wire_thread
+  message_id: "<message id>"
 ```
 
-旧 ccwire の置換。 actor address は `{actor}@{project}` 形式 (mem `mem_1CaBRBdh1PGop2iGLAnwSY` 参照)。
+ccwire / msgbox は廃止、 wiremsg に一本化。 wire address は `agent@<project>` (lead) /
+`agent@<project>/<lane>` (wing) 形式。 thread は `prev` parent-pointer で表現される (`thread_id` は無い)。
 
 ### 5. UI スクショで AI 自身が視認
 
@@ -103,7 +105,7 @@ mcp__vantage-point__capture_terminal
 
 ---
 
-## MCP Tools 一覧 (35 個、 v0.17.0 / 2026-05-08 状態)
+## MCP Tools 一覧 (31 個、 wiremsg 移行後の状態)
 
 ### Display / Canvas (Paisley Park 🧭)
 
@@ -159,17 +161,13 @@ mcp__vantage-point__capture_terminal
 | `add_worker` | Worker workspace を spawn (branch + ahead-behind + dirty 状態 sidebar 表示) |
 | `delete_worker` | Worker workspace を片付け (merge 確認・dirty 警告込み) |
 
-### Msgbox (inter-agent 通信、 旧 ccwire 置換)
+### wiremsg (inter-agent 通信、 ccwire / msgbox 廃止 → wiremsg に一本化)
 
 | Tool | 用途 |
 |------|------|
-| `msg_send` | actor address (`agent@project-name`) に送信 |
-| `msg_recv` | message 受信 (timeout 指定可) |
-| `msg_ack` | manual_ack message を ack (persistent 用) |
-| `msg_broadcast` | 全 peer に broadcast (best-effort) |
-| `msg_thread` | reply_to chain 全体取得 (persistent message のみ) |
-| `msg_peers` | 同 process の addresses |
-| `msg_directory` | 全 process の actor 一覧 (TheWorld registry 経由) |
+| `wire_send` | wire address (`agent@<project>` / `agent@<project>/<lane>`) に送信。 `reply_to` なし = 新規 thread の root、 あり = その thread への reply (reply-all 展開) |
+| `wire_recv` | 自分が参加する全 wire thread の未読 message を受信 (timeout 指定可、 読むと cursor 前進) |
+| `wire_thread` | 指定 message から `prev` を root まで辿った系譜 (ancestor-chain、 root-first) を取得。 cursor は触らない |
 
 ### Port management (slot × lane × role)
 
@@ -249,7 +247,7 @@ Canvas は **タブ付き統合ウィンドウ**。 各タブが project を表�
 | Lane が dead 化 (claude zombie) | Lifecycle monitor が 5s 以内に検知 → sidebar 赤 dot 表示 → 手動 respawn |
 | ghost characters (xterm.js 残留文字) | known issue (`mem_1CaVpvsBKR3ckieRXo1nwr`)、 Phase 6+ で対処予定 |
 | `mcp_call timeout` | Process restart で復旧、 5s timeout は QUIC 経路で発生 |
-| `wire_*` 系 commands が動かない | ccwire は Phase 5 で deprecate、 `msg_*` で代替 (Msgbox section 参照) |
+| `wire_*` 系 commands が動かない | SP が起動しているか確認 (`vp app` で sidebar から expand → auto-spawn)、 宛先 wire address の表記を再確認 (`agent@<project>` / `agent@<project>/<lane>`) |
 
 ---
 
@@ -363,7 +361,7 @@ mcp__vantage-point__toggle_pane({ pane_id: "main" })
 - Mental model 舞台-役者-演目 (`mem_1CaVnfJRgWtuRgZD9yQSoV`) — TH/HD/Profile の関係性
 - Hub federation 仕様 (`mem_1CaVeTysipdgVHoxwxUcPj`, chronista-club Atlas) — Phase 7+
 - 4 scope architecture (`mem_1CaSugEk1W2vr5TAdfDn5D`) — App/Project/Lane/Pane
-- Mailbox Address spec (`mem_1CaBRBdh1PGop2iGLAnwSY`) — `actor@project` 形式
+- wire address spec — `agent@<project>` (lead) / `agent@<project>/<lane>` (wing)、 `notify@<project>` 等の actor slot
 
 ---
 
