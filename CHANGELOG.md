@@ -8,11 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `dev-flow` skill (`skills/dev-flow/SKILL.md`): VP の Lead × Wing × Memory orchestration による開発フロー — hearing → 議論 → spec memory → wing handoff → 並列追跡 → merge の 6 phase。 chronista-style stack (= hearing / codeflow / council / sex-pistols / santa-method 等) と統合、 auto / human-in-the-loop の 2 mode + 動的 shift trigger を formalize。 canonical memory `mem_1CbUUzvguCptQPU4eWTKHx`
+- dev-flow skill v0.2.0: **principle 5 「control surrender awareness」 追加** + 「worker」 用語撤去 (= VP は wing 1 用語に統一、 役割 / 動的主体としても wing が立つ)。 5 state FSM (idle / working / hitl_pending / completed / stuck) を wire pattern で derive、 metadata 追加ゼロで「control 手放してる / 手放してない」 を可視化。 lead が複数 wing の control 状態を一望して必要な wing にだけ介入する構造を formalize
+- **SKILL.md に「MCP ↔ CLI pair invariant」 section を追加**: VP の規約 (= 同じ logic を MCP / CLI 両方から expose) を明文化、 pair table + invariant の守り方 + `list_lanes` vs `vp ps` vs `vp lane ls` の役割整理を追記 (VP 本体 PR mcp-cli-audit)
+
 ### Changed
 - wiremsg 移行に doc を同期: `msg_send` / `msg_recv` / `msg_ack` / `msg_peers` / `msg_thread` / `msg_directory` / `msg_broadcast` を `wire_send` / `wire_recv` / `wire_thread` に差し替え (VP 本体 PR #406〜#420)
 - `vp mailbox` CLI → `vp wire watch` / `vp wire send` / `vp wire watch-supervised` に同期
 - ccwire / msgbox は廃止、 inter-agent 通信は wiremsg に一本化。 thread は `prev` parent-pointer で表現 (`thread_id` は無い)
 - SKILL.md / reference/mcp-tools.md / hooks スクリプトの inter-agent 通信記述を wiremsg に更新
+- SKILL.md の旧 Worker workspace section を Wing Lane (Whitesnake 🐍 連動) に rename: `add_worker` / `delete_worker` 表記を `add_wing` / `delete_wing` に更新 (VP 本体 lane refactor `worker→wing` 2026-05-17 と同期、 doc rot 解消)
 
 
 ## [0.17.0] - 2026-05-08
