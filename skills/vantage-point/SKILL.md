@@ -154,12 +154,12 @@ mcp__vantage-point__capture_terminal
 | `permission` | tool 実行 permission 要求 (user 確認 dialog) |
 | `restart` | VP Process restart (session 状態保持) |
 
-### Worker workspace (Whitesnake 🐍 連動)
+### Wing Lane (Whitesnake 🐍 連動)
 
 | Tool | 用途 |
 |------|------|
-| `add_worker` | Worker workspace を spawn (branch + ahead-behind + dirty 状態 sidebar 表示) |
-| `delete_worker` | Worker workspace を片付け (merge 確認・dirty 警告込み) |
+| `add_wing` | Wing Lane を spawn (branch + ahead-behind + dirty 状態 sidebar 表示)。 旧名 `add_worker` (lane rename `worker→wing` で更新済) |
+| `delete_wing` | Wing Lane を片付け (PTY kill + tmux kill + workspace dir cleanup を 1 call で完結)。 旧名 `delete_worker` |
 
 ### wiremsg (inter-agent 通信、 ccwire / msgbox 廃止 → wiremsg に一本化)
 
@@ -177,6 +177,54 @@ mcp__vantage-point__capture_terminal
 | `port_url` | localhost URL 生成 (`http://localhost:{port}`) |
 | `port_roles` | role → offset table (agent/dev_server/db_admin/canvas/preview) |
 | `port_layout` | 1 project slot の全 port 配置 (Markdown) |
+
+---
+
+## MCP ↔ CLI pair invariant
+
+VP は **「同じ logic を MCP (= AI agent 用) + CLI (= human 用) 両方から expose する」** を invariant として持つ。 同等 logic に 2 つの surface を保つことで、 AI session でも human session でも同じ操作を呼べる。
+
+### pair table
+
+| MCP tool | CLI subcommand | 備考 |
+|---|---|---|
+| `show` | `vp pane show <content>` | `--pane-id` / `--format` / `--target` / `--append` / `--title` |
+| `clear` | `vp pane clear` | `--pane-id` / `--target` |
+| `toggle_pane` | `vp pane toggle <pane_id>` | `--visible` で明示指定 |
+| `close_pane` | `vp pane close <pane_id>` | |
+| `switch_lane` | `vp lane switch <name>` | TheWorld :32000 経由で Canvas WS 全 client に broadcast |
+| `add_wing` | `vp lane new <name> <branch>` | CLI 側は server 経由ではなく lane library 直呼び (= SP 不在でも作れる)、 MCP は SP 経由 |
+| `delete_wing` | `vp lane rm <name>` | CLI 側は SP 稼働中なら SP 経由 orchestrated (PTY/tmux/workspace 全部)、 不在なら fs-only fallback |
+| `list_lanes` | `vp lane ls --detail` | `--detail` で SP `/api/lanes` を query して MCP 同等 JSON 出力 (= SP 稼働中のみ)。 `vp lane ls` (default) は fs scan の簡易 `name<TAB>branch<TAB>path` |
+| `wire_send` | `vp wire send` | `--to` / `--body` / `--reply-to` |
+| `wire_recv` | `vp wire recv` | 1-shot 受信、 `--agent` / `--timeout`。 連続 subscribe は `vp wire watch` |
+| `wire_thread` | (CLI 未提供) | message 系譜 trace は MCP のみ |
+| `tmux_split` | `vp tmux split` | |
+| `tmux_capture` | `vp tmux capture` | |
+| `tmux_dashboard` | `vp tmux dashboard` | |
+| `tmux_agent_deploy` | `vp tmux deploy` | |
+| `tmux_agent_send` | `vp tmux send-keys` | |
+| `capture_canvas` / `capture_terminal` | `vp shot` | CLI 側は `vp shot` (canonical) に統一、 MCP は target ごとに別 tool |
+| `port_show` / `port_url` / `port_roles` / `port_layout` | `vp port show` / `vp port url` / `vp port roles` / `vp port layout` | |
+| `watch_file` / `unwatch_file` | `vp file watch` / `vp file unwatch` | |
+| `restart` | `vp restart` | Process 再起動 |
+| `eval_ruby` / `run_ruby` / `stop_ruby` / `list_ruby` | (CLI 未提供) | Ruby VM 系は MCP のみ |
+
+### invariant の守り方
+
+- 新規 MCP tool を追加する時は、 同等の CLI subcommand を **同 PR で** 追加する (= pair を割らない)
+- 新規 CLI subcommand を追加する時も同様、 MCP tool 側を更新
+- ロジック本体は library (= `crates/vantage-point/src/lane/` / `crates/vantage-point/src/commands/`) に置き、 MCP と CLI は薄い surface として呼び出す
+- 命名は **MCP = snake_case、 CLI = kebab-case**。 命名揺れ (`add_wing` (= wing 後置) vs `wing_add` (= wing 前置)) は **将来 audit で再整合** する余地あり (= 現状は `<verb>_<noun>` 系を歴史経緯で許容)
+
+### `list_lanes` vs `vp ps` の役割整理
+
+両者は重複しているように見えて scope が違う:
+
+- **`mcp__list_lanes`** = 現 project の **全 Lane (Lead + Wing)** を返す。 state / stand / pid / cwd / wing_status / mailbox_addresses 詳細付き。 同 project 内の Lane を探す / wire 送信先を決める時に使う
+- **`vp ps`** = TheWorld 配下の **全 project の SP process** を一覧。 port + pid + project_name の概要のみ。 「どの project が稼働中?」 を見る時に使う
+- **`vp lane ls`** = current cwd の repo の wing dir を **fs scan で簡易表示** (`name<TAB>branch<TAB>path`)。 SP 不要、 oneshot 用途
+- **`vp lane ls --detail`** = `mcp__list_lanes` の CLI pair。 SP `/api/lanes` を query して詳細 JSON を出す。 SP 稼働中のみ
 
 ---
 
