@@ -4,7 +4,7 @@ description: Display content in the Vantage Point dashboard
 
 # Show Content
 
-Display content in the Vantage Point browser viewer.
+Display content in the Vantage Point Canvas (Paisley Park).
 
 ## Usage
 

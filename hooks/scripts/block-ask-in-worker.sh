@@ -1,20 +1,20 @@
 #!/bin/bash
-# PreToolUse hook: worker lane 環境では AskUserQuestion をブロック
-# worker は lead agent に wiremsg (wire_send) で問い合わせる
+# PreToolUse hook: performer lane 環境では AskUserQuestion をブロック
+# performer は conductor agent に wiremsg (wire_send) で問い合わせる
 #
 # 旧 ccnav plugin の block-ask-in-worker.sh を統合・現行化:
-# - worker 判定パスを vp_data_dir()/lanes/ (= `/vp/lanes/`) に追従
+# - performer 判定パスを vp_data_dir()/lanes/ (= `/vp/lanes/`) に追従
 # - ccwire / msgbox は廃止、 wiremsg (wire_send) に一本化済み
 
 CURRENT_DIR=$(pwd)
 
-# lane (worker 環境) 内のときだけブロック。lane データディレクトリは
+# lane (performer 環境) 内のときだけブロック。lane データディレクトリは
 # vp_data_dir()/lanes/ — macOS/Linux 共通で `/vp/lanes/` を含む。
 if echo "$CURRENT_DIR" | grep -q "/vp/lanes/"; then
   cat <<'EOF'
 {
   "decision": "block",
-  "reason": "worker lane 環境では AskUserQuestion は使用できません。\n質問は lead agent に wiremsg で送信してください:\n  wire_send tool で宛先 \"agent@<project>\" (lead address) に問い合わせる。"
+  "reason": "performer lane 環境では AskUserQuestion は使用できません。\n質問は conductor agent に wiremsg で送信してください:\n  mcp__vantage-point__wire_send で宛先 \"agent@<project>\" (conductor address) に問い合わせる。"
 }
 EOF
 else
