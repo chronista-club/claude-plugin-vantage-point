@@ -8,6 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **skill docs を VP v0.44 実サーフェスに全面同期** (`skills/vantage-point/SKILL.md` / `reference/mcp-tools.md` / `skills/dev-flow/SKILL.md` / `README.md`)。 SSOT = `crates/vantage-point/src/mcp{,.rs}` + `src/generated/agent_tools.rs`、 実 MCP tool は 20 個:
+  - 存在しない tool の記述を削除: `toggle_pane` / `close_pane` / `watch_file` / `unwatch_file` / `port_show|url|roles|layout` / `permission` (#625 tool 整理で撤去) + `lane_nudge` (MCP には元から無い、 CLI `vp lane nudge` のみ)。 main に残っていた `tmux_*` / `eval_ruby` 系 / `add_wing` / `capture_terminal` / `open_canvas` 系も一掃
+  - `show`: `append` param は存在しない / `pane_id` は dead field (全 show は現 lane の PP body stack に集約、 doc 19) — 旧 3-pane (main/left/right) モデルの記述を撤去
+  - `delete_performer`: param は `force` でなく `cleanup`。 `add_performer` / `flow_handoff` に `stand` / `base` / `model` を追記
+  - dev-flow: control state machine を 5 → 6 state に更新 (`awaiting_user` 追加、 2026-07-11 VP 本体) + wire kind `needs_user` を taxonomy に追加。 `mcp__creo-memories-mito__remember` → `mcp__creo-memories__remember`
+  - 用語を conductor / performer に統一 (未 merge branch `docs/sync-vp-v0.40-conductor-performer` の同期内容を土台に取り込み)
+  - `vp app` → `vp app start`、 対応バージョン v0.40+ → v0.44+、 dogfooding tip を現行化 (XDG log path / `mise run app:swap`)
+
+### Fixed
+- **hooks/lane-status.sh の lane 判定が silent no-op だったのを修正**: 判定 pattern `/vp/lanes/` が現 lane 配置 `<repo>/.vp/lanes/` (project-local、 旧 `vp_data_dir()/lanes/` から移動) に不一致で、 in-lane 分岐が常に不発だった。 pattern を `/\.vp/lanes/` に更新
+- **`plugin.json` description を刷新**: 「Rich dashboard display - show memories, todos...」(旧 3-pane dashboard 前提) から「AI-native development environment — Canvas visualization, performer lanes, wiremsg inter-agent messaging, and dev-flow orchestration」へ。 keywords も同期 (`dashboard`/`memories`/`todos`/`context` → `canvas`/`performer-lane`/`wiremsg`/`dev-flow`/`orchestration`)
+
+### Removed
+- **`commands/show.md` / `commands/clear.md`**: MCP tool `show` / `clear` の薄い wrapper。 `show.md` は存在しない `append` param を記載していた。 MCP tool 自体は現存、 CLI からは直接 tool 呼び出しで代替可能
+- **`commands/dashboard.md`**: 前提の 3-pane (main/left/right) モデルが崩壊 (`pane_id` は dead field、 全 show は PP body stack に集約) + `gh issue list --label next` が現運用 (GitHub Issues 不使用、 creo-memories に一本化) と矛盾
+- **`hooks/scripts/session-start.sh`**: 案内していた `/vantage-point:dashboard` が削除済み (リンク切れ) + git repo/branch context は Claude Code 標準 context と重複。 「VP Lane 環境 / lane 一覧」出力は元々 `hooks/scripts/lane-status.sh` の責務であり、 削除後も維持される
+- **`hooks/scripts/block-ask-in-worker.sh`** + `hooks.json` の `PreToolUse` entry: (a) lane 判定 pattern が `/vp/lanes/` のままで現配置 `<repo>/.vp/lanes/` に不一致、 常に no-op と化していた、 (b) VP 本体が doc 35 で Act II HITL (`AskUserQuestion` を control protocol 経由で復活させる方向) を進めており、 本 hook の「worker で AskUserQuestion を block する」方針自体が現行の設計方向と逆行するため確定で削除
+
 
 ## [0.19.1] - 2026-07-13
 

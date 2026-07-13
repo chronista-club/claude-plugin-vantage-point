@@ -15,33 +15,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/session-start.sh",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/lane-status.sh",
             "timeout": 10
           }
         ]
       }
     ],
-    "PreToolUse": [
-      {
-        "matcher": "AskUserQuestion",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/block-ask-in-worker.sh",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
+    "PreToolUse": [],
     "PostToolUse": []
   }
 }
