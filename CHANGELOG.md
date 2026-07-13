@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-07-14
+
 ### Changed
 - **VP v0.45 実サーフェスに追随** (v0.44.0 → v0.45.0 の全 diff 確認):
   - MCP tool surface は **v0.44 から無変更** (`src/mcp{,.rs}` / `generated/agent_tools.rs` に diff ゼロ、 20 個のまま)。 対応バージョン表記を v0.44+ → v0.45+ に更新

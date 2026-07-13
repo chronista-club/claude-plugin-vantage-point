@@ -1,7 +1,7 @@
 {
   "name": "vantage-point",
   "description": "AI-native development environment — Canvas visualization, performer lanes, wiremsg inter-agent messaging, and dev-flow orchestration for Claude Code",
-  "version": "0.19.1",
+  "version": "0.20.0",
   "author": {
     "name": "Chronista Club",
     "url": "https://github.com/chronista-club"
