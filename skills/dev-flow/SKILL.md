@@ -1,7 +1,7 @@
 ---
 name: dev-flow
 description: VP の Conductor × Performer × Memory orchestration による開発フロー — hearing → 議論 → spec memory → performer handoff → 並列追跡 → merge の 6 phase。 「並列開発」 「conductor performer」 「handoff」 「並列 performer」 「control surrender」 「dev flow」 等のキーワードで invoke
-version: 0.3.2
+version: 0.3.3
 tags:
   - dev-flow
   - orchestration
@@ -95,6 +95,8 @@ tags:
 ```
 
 > `awaiting_user` は 2026-07-11 追加 (= `hitl_pending` が conductor 待ちなのに対し、 conductor では代答できない**ユーザ本人**待ちの別軸)。
+>
+> **Act II HITL rail (VP v0.45)**: HITL 4 面 (= ①質問 ②中断 ③permission ④plan 承認、 doc 35) が完成し、 performer の echoes (Act II chat GUI) では native `AskUserQuestion` / permission prompt / `ExitPlanMode` が GUI の PromptCard / PermissionCard / PlanCard として**直接ユーザに届く** (sidebar needs-you も点灯)。 wire `needs_user` rail (= conductor 経由、 上図) と並存する GUI 直通 rail — ユーザが lane を開いていれば GUI で即答でき、 開いていなくても sidebar 点灯で気付ける。
 
 ### derivation logic
 
@@ -175,7 +177,7 @@ Phase 6: 統合 + merge  →  PR review (moody-blues / santa-method) → merge �
 
 | tool | layer | 用途 |
 |---|---|---|
-| `mcp__vantage-point__flow_handoff` / `vp flow handoff` | handoff | performer 作成 + wire_send + lane_nudge を atomic (= 失敗時 rollback) |
+| `mcp__vantage-point__flow_handoff` / `vp flow handoff` | handoff | performer 作成 + wire_send + lane_nudge を atomic (= 失敗時 rollback)。 二重 dispatch は creation reservation で防止 (v0.45) |
 | `mcp__vantage-point__flow_progress` / `vp flow progress` | state | 全 performer の git status + unread wire + `flow_state` / `control_surrender` 集約 view |
 | `mcp__vantage-point__add_performer` / `vp lane new` | performer 作成 | lane clone + echoes spawn (handoff 使わない場合の低レベル操作) |
 | `mcp__vantage-point__wire_send` / `vp wire send` | message | thread 化 inter-agent msg (= `reply_to` で chain、`body.category` で delivery policy) |
