@@ -284,7 +284,7 @@ mcp__vantage-point__wire_send
 | P2 | ヒアリング: principle 8 個確定 (= visible-first / blocklist / toggle / search 全 file 等) → ultrathink で paradigm shift 議論 (= KDL Ruby × creo Schema Registry × Projection Engine) |
 | P3 | spec 確定: 4 段 pivot を decision memory `mem_1CbUPuphWcEQq39MGX8k7z` で記録 |
 | P4 | 4 performer handoff: nexus-server (= VP federation hub server scaffold) / pp-content-persist (= PP state SurrealDB 永続化) / mcp-cli-audit (= mcp ↔ cli pair gap 埋め) / flow-tools (= dev-flow primitives 実装) |
-| P5 | 並列追跡: list_lanes で performer_status 確認、 wire_recv で question 受信、 thread reply で approve。 各 performer の control 状態を 5 state FSM で識別 |
+| P5 | 並列追跡: list_lanes で performer_status 確認、 wire_recv で question 受信、 thread reply で approve。 各 performer の control 状態を 6 state FSM で識別 |
 | P6 | merge pending: PR #460 (XDG) + PR #461 (zero-config) auto-merge 仕掛け中、 nexus-server PR #466 merge 済 (= autonomous 完結) |
 
 **特徴**:
