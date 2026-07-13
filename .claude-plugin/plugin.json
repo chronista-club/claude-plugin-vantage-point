@@ -1,6 +1,6 @@
 {
   "name": "vantage-point",
-  "description": "Rich dashboard display for Claude Code - show memories, todos, context, and research results",
+  "description": "AI-native development environment — Canvas visualization, performer lanes, wiremsg inter-agent messaging, and dev-flow orchestration for Claude Code",
   "version": "0.19.1",
   "author": {
     "name": "Chronista Club",
@@ -8,11 +8,11 @@
   },
   "repository": "https://github.com/chronista-club/claude-plugin-vantage-point",
   "keywords": [
-    "dashboard",
-    "visualization",
-    "memories",
-    "todos",
-    "context"
+    "canvas",
+    "performer-lane",
+    "wiremsg",
+    "dev-flow",
+    "orchestration"
   ],
   "license": "MIT",
   "homepage": "https://github.com/chronista-club/claude-plugin-vantage-point"

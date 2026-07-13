@@ -19,6 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **hooks/lane-status.sh の lane 判定が silent no-op だったのを修正**: 判定 pattern `/vp/lanes/` が現 lane 配置 `<repo>/.vp/lanes/` (project-local、 旧 `vp_data_dir()/lanes/` から移動) に不一致で、 in-lane 分岐が常に不発だった。 pattern を `/\.vp/lanes/` に更新
+- **`plugin.json` description を刷新**: 「Rich dashboard display - show memories, todos...」(旧 3-pane dashboard 前提) から「AI-native development environment — Canvas visualization, performer lanes, wiremsg inter-agent messaging, and dev-flow orchestration」へ。 keywords も同期 (`dashboard`/`memories`/`todos`/`context` → `canvas`/`performer-lane`/`wiremsg`/`dev-flow`/`orchestration`)
+
+### Removed
+- **`commands/show.md` / `commands/clear.md`**: MCP tool `show` / `clear` の薄い wrapper。 `show.md` は存在しない `append` param を記載していた。 MCP tool 自体は現存、 CLI からは直接 tool 呼び出しで代替可能
+- **`commands/dashboard.md`**: 前提の 3-pane (main/left/right) モデルが崩壊 (`pane_id` は dead field、 全 show は PP body stack に集約) + `gh issue list --label next` が現運用 (GitHub Issues 不使用、 creo-memories に一本化) と矛盾
+- **`hooks/scripts/session-start.sh`**: 案内していた `/vantage-point:dashboard` が削除済み (リンク切れ) + git repo/branch context は Claude Code 標準 context と重複。 「VP Lane 環境 / lane 一覧」出力は元々 `hooks/scripts/lane-status.sh` の責務であり、 削除後も維持される
+- **`hooks/scripts/block-ask-in-worker.sh`** + `hooks.json` の `PreToolUse` entry: (a) lane 判定 pattern が `/vp/lanes/` のままで現配置 `<repo>/.vp/lanes/` に不一致、 常に no-op と化していた、 (b) VP 本体が doc 35 で Act II HITL (`AskUserQuestion` を control protocol 経由で復活させる方向) を進めており、 本 hook の「worker で AskUserQuestion を block する」方針自体が現行の設計方向と逆行するため確定で削除
 
 
 ## [0.19.1] - 2026-07-13

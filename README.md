@@ -8,7 +8,7 @@ Claude Code plugin for AI-native development — Canvas visualization, parallel 
 - **Performer Lanes** — conductor + performer の並列開発環境 (`vp lane`, `add_performer`)
 - **wiremsg** — project 跨ぎ inter-agent 通信 (`wire_send` / `wire_recv` / `wire_inbox` / `wire_ack`)
 - **dev-flow primitives** — `flow_handoff` / `flow_progress` で Conductor × Performer orchestration
-- **Auto-update Hooks** — SessionStart で lane 状態をコンテキスト注入、 performer lane で AskUserQuestion をブロック
+- **Auto-update Hooks** — SessionStart で lane 状態をコンテキスト注入
 - **Screenshot** — `vp shot` / `capture_canvas` で UI を PNG 化
 
 ## Requirements
@@ -43,9 +43,7 @@ Claude Code スラッシュコマンド:
 
 | Command | Description |
 |---------|-------------|
-| `/vantage-point:show` | ペインにコンテンツを表示 |
-| `/vantage-point:dashboard` | フルダッシュボードを初期化（3ペイン） |
-| `/vantage-point:clear` | ペインのコンテンツをクリア |
+| `/vantage-point:rename` | ローカルLLM(LM Studio)で日本語セッション名を生成 |
 
 ## Skills
 
