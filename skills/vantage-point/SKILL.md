@@ -123,7 +123,7 @@ mcp__vantage-point__capture_canvas
 
 ---
 
-## MCP Tools 一覧 (VP v0.44+、 全 20 個)
+## MCP Tools 一覧 (VP v0.45+、 全 20 個 — surface は v0.44 から不変)
 
 ### Display / Canvas (Paisley Park 🧭)
 
@@ -211,10 +211,9 @@ VP は **「同じ logic を MCP (= AI agent 用) + CLI (= human 用) 両方か�
 | `wire_ack` | `vp wire ack` | |
 | `wire_thread` | `vp wire thread` | |
 | `capture_canvas` | `vp shot` | CLI は canonical screenshot |
+| `restart` | `vp restart-all` | 全 Process + TheWorld 再起動 |
 
 **CLI のみ（MCP pair なし）**: `vp lane nudge <lane> <text>` / `vp lane capture <lane>` / `vp pane toggle|close|split` / `vp file watch|unwatch` / `vp port show|url|roles|layout|slot`
-| `port_*` | `vp port show\|url\|roles\|layout` | |
-| `restart` | `vp restart-all` | 全 Process + TheWorld 再起動 |
 
 ### `list_lanes` vs `vp ps` vs `vp lane ls`
 
@@ -233,7 +232,7 @@ TheWorld 👑 (32000) — 常駐 daemon、 全 SP を管理
   ├── Hermit Purple 🍇 — External Control (MIDI / MCP)
   │
   └── Star Platinum ⭐ (project SP, 33xxx) — Project 単位の容器
-        ├── Echoes 💬 — Coding Assistant (Claude CLI。 Act I = TUI console / Act II = chat GUI)
+        ├── Echoes 💬 — Coding Assistant (Claude CLI。 Act I = TUI console / Act II = chat GUI + HITL 4 面: 質問 / 中断 / permission / plan 承認 — v0.45)
         ├── Paisley Park 🧭 — Information Navigator (Canvas / WebView + Frame Engine)
         ├── Gold Experience 🌿 — Code Runner (process 管理)
         └── (per slot) Lane — PTY セッション (Conductor + Performers)
@@ -286,6 +285,7 @@ Canvas は **vp-app 常駐の統合ウィンドウ**。 lane ごとに PP (Paisl
 | `mcp_call timeout` | `restart` / `vp restart-all` で復旧 |
 | `wire_*` が動かない | SP 起動確認 (`vp app start` → sidebar expand)、 wire address 再確認 (`agent@<project>` / `agent@<project>/<performer>`) |
 | command msg が何度も nudge される | 受信側が `wire_ack` を忘れている |
+| 1 lane に claude session が 2 つ並走 (二重 dispatch) | v0.45 で根治 (create の reservation が同 addr の並行 create を reject)。 v0.44 以前なら VP を更新 |
 
 ---
 

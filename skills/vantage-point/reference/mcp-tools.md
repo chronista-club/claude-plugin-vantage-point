@@ -5,7 +5,7 @@
 Vantage Point は vp-app 常駐 Canvas、 performer lane 管理、 wiremsg inter-agent 通信、 dev-flow orchestration を提供する MCP サーバーです。
 
 **MCPサーバー名**: `vantage-point`
-**対応 VP バージョン**: v0.44+
+**対応 VP バージョン**: v0.45+（MCP tool surface は v0.44 から不変）
 **実ツール数**: 20（SSOT = `crates/vantage-point/src/mcp{,.rs}` + `src/generated/agent_tools.rs`）
 
 Process が起動していない場合、MCP ツール呼び出し時に自動的に Process を起動します（自動起動リレー）。
@@ -120,6 +120,8 @@ CLI pair: `vp lane new <name> <branch> [--isolation worktree|clone] [--base <ref
 
 **戻り値**: lane address `<project>/performer/<name>`、 path、 git 状態。
 
+> 同 addr への並行 create は creation reservation で reject される（v0.45、 二重 dispatch TOCTOU 根治）。
+
 ### delete_performer
 
 ```typescript
@@ -153,7 +155,7 @@ CLI pair: `vp lane ls --detail`
 
 ### flow_handoff
 
-performer 作成 + wire_send + nudge を atomic 実行。 失敗時 rollback。
+performer 作成 + wire_send + nudge を atomic 実行。 失敗時 rollback。 二重 dispatch は creation reservation で防止（v0.45）。
 
 ```typescript
 mcp__vantage-point__flow_handoff({

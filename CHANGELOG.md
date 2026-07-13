@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **VP v0.45 実サーフェスに追随** (v0.44.0 → v0.45.0 の全 diff 確認):
+  - MCP tool surface は **v0.44 から無変更** (`src/mcp{,.rs}` / `generated/agent_tools.rs` に diff ゼロ、 20 個のまま)。 対応バージョン表記を v0.44+ → v0.45+ に更新
+  - **Act II HITL 4 面完成** (#748 質問 / #752 中断 / #753 permission / #754 plan 承認) を skill docs に反映 — performer echoes (Act II chat GUI) の native `AskUserQuestion` / permission prompt / `ExitPlanMode` が PromptCard / PermissionCard / PlanCard として直接ユーザに届き sidebar needs-you が点灯。 dev-flow skill には wire `needs_user` rail (conductor 経由) と並存する GUI 直通 rail として記述 (dev-flow v0.3.3)
+  - **二重 dispatch TOCTOU 根治** (#750、 `create_performer_orchestrated` の creation reservation — `add_performer` / `flow_handoff` / `vp lane new` 共通 core) を tool 説明 + troubleshooting に追記
+  - SKILL.md pair table の崩れを修正: `restart` 行と MCP に存在しない `port_*` 行が table 外 (「CLI のみ」段落直後) に漏出していた — `restart` を pair table 内に戻し、 `port_*` 行を削除
 - **skill docs を VP v0.44 実サーフェスに全面同期** (`skills/vantage-point/SKILL.md` / `reference/mcp-tools.md` / `skills/dev-flow/SKILL.md` / `README.md`)。 SSOT = `crates/vantage-point/src/mcp{,.rs}` + `src/generated/agent_tools.rs`、 実 MCP tool は 20 個:
   - 存在しない tool の記述を削除: `toggle_pane` / `close_pane` / `watch_file` / `unwatch_file` / `port_show|url|roles|layout` / `permission` (#625 tool 整理で撤去) + `lane_nudge` (MCP には元から無い、 CLI `vp lane nudge` のみ)。 main に残っていた `tmux_*` / `eval_ruby` 系 / `add_wing` / `capture_terminal` / `open_canvas` 系も一掃
   - `show`: `append` param は存在しない / `pane_id` は dead field (全 show は現 lane の PP body stack に集約、 doc 19) — 旧 3-pane (main/left/right) モデルの記述を撤去

@@ -13,7 +13,7 @@ Claude Code plugin for AI-native development — Canvas visualization, parallel 
 
 ## Requirements
 
-- Vantage Point CLI (`vp`) v0.44+ がインストール済み
+- Vantage Point CLI (`vp`) v0.45+ がインストール済み（MCP tool surface は v0.44 から不変）
 - Process が未起動でも MCP ツール呼び出し時に自動起動
 
 ## Installation
