@@ -8,10 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [0.19.0] - 2026-07-13
+
 ### Added
+- **SessionStart hook に `vp wire hook-check` を追加**: lane の CC session id 記録 (VP 本体 R3-b、 `cc_session` state file) の書き手を plugin が担う。 旧方式 (= global `~/.claude/settings.json` への手動設置、 new-machine-setup 依存) は settings 掃除で silent に消え、「lane で New Session しても daemon/app 再起動で古い session が `--resume` される」不具合の根因だった。 plugin 同梱により install に追従して自動修復。 `vp` 不在マシンは `command -v` guard で silent skip (fail-open)
+- `rename` command (`commands/rename.md`): ローカル LLM (LM Studio) で日本語セッション名を生成 (#8)
 - `dev-flow` skill (`skills/dev-flow/SKILL.md`): VP の Lead × Wing × Memory orchestration による開発フロー — hearing → 議論 → spec memory → wing handoff → 並列追跡 → merge の 6 phase。 chronista-style stack (= hearing / codeflow / council / sex-pistols / santa-method 等) と統合、 auto / human-in-the-loop の 2 mode + 動的 shift trigger を formalize。 canonical memory `mem_1CbUUzvguCptQPU4eWTKHx`
 - dev-flow skill v0.2.0: **principle 5 「control surrender awareness」 追加** + 「worker」 用語撤去 (= VP は wing 1 用語に統一、 役割 / 動的主体としても wing が立つ)。 5 state FSM (idle / working / hitl_pending / completed / stuck) を wire pattern で derive、 metadata 追加ゼロで「control 手放してる / 手放してない」 を可視化。 lead が複数 wing の control 状態を一望して必要な wing にだけ介入する構造を formalize
 - **SKILL.md に「MCP ↔ CLI pair invariant」 section を追加**: VP の規約 (= 同じ logic を MCP / CLI 両方から expose) を明文化、 pair table + invariant の守り方 + `list_lanes` vs `vp ps` vs `vp lane ls` の役割整理を追記 (VP 本体 PR mcp-cli-audit)
+
+
+## [0.18.0] - 2026-05-22
 
 ### Changed
 - wiremsg 移行に doc を同期: `msg_send` / `msg_recv` / `msg_ack` / `msg_peers` / `msg_thread` / `msg_directory` / `msg_broadcast` を `wire_send` / `wire_recv` / `wire_thread` に差し替え (VP 本体 PR #406〜#420)
