@@ -1,52 +1,40 @@
 # Vantage Point Plugin
 
-Claude Code plugin for rich dashboard display during development sessions.
+Claude Code plugin for AI-native development — Canvas visualization, parallel performer lanes, wiremsg inter-agent communication, and dev-flow orchestration.
 
 ## Features
 
-- **3-Pane Dashboard** - Left (memories), Main (todos), Right (context)
-- **Canvas Mode** - ネイティブWebViewウィンドウでダッシュボードを表示
-- **Browser Mode** - ブラウザでダッシュボードを表示（`vp start` で起動）
-- **Auto-update Hooks** - SessionStart フックでダッシュボードを自動初期化
-- **Flexible Display** - Markdown, HTML, log 形式をサポート
-- **Ruby VM** - Rubyコードの実行・デーモン管理（Heaven's Door）
+- **vp-app Canvas** — Markdown, HTML, log, URL を Paisley Park に表示
+- **Performer Lanes** — conductor + performer の並列開発環境 (`vp lane`, `add_performer`)
+- **wiremsg** — project 跨ぎ inter-agent 通信 (`wire_send` / `wire_recv` / `wire_inbox` / `wire_ack`)
+- **dev-flow primitives** — `flow_handoff` / `flow_progress` で Conductor × Performer orchestration
+- **Auto-update Hooks** — SessionStart で lane 状態をコンテキスト注入、 performer lane で AskUserQuestion をブロック
+- **Screenshot** — `vp shot` / `capture_canvas` で UI を PNG 化
 
-## Canvas vs Browser モード
+## Requirements
 
-| モード | 起動方法 | 特徴 |
-|--------|----------|------|
-| Canvas | `open_canvas` MCPツール | ネイティブWebViewウィンドウ。ブラウザ不要 |
-| Browser | `vp start` CLI | ブラウザで `http://localhost:<port>` にアクセス |
-
-どちらのモードでも同じペインレイアウトとコンテンツ表示機能が使える。
-
-## Dashboard Layout
-
-```
-+------------------+----------------------+--------------------+
-| LEFT (memories)  | MAIN (tasks)         | RIGHT (context)    |
-+------------------+----------------------+--------------------+
-| Recent Memories  | Current Todos        | Context            |
-| - Design: ...    | - [ ] Task 1         | pwd: /path/to      |
-| - Decision: ...  | - [x] Task 2         | branch: main       |
-|                  |                      |                    |
-| Related          | Next Actions         | Research           |
-| - Memory 1       | (from gh issues)     | - Bike Boy results |
-| - Memory 2       | - #12 Feature X      |                    |
-|                  | - #15 Bug fix        | SDG                |
-|                  |                      | - current design   |
-+------------------+----------------------+--------------------+
-```
+- Vantage Point CLI (`vp`) v0.44+ がインストール済み
+- Process が未起動でも MCP ツール呼び出し時に自動起動
 
 ## Installation
 
 ```bash
-# From official marketplace (coming soon)
-claude plugin install vantage-point@claude-plugins-official
-
-# Or from GitHub
+# From GitHub marketplace
 /plugin marketplace add chronista-club/claude-plugins
 claude plugin install vantage-point@chronista-plugins
+```
+
+## Quick Start
+
+```bash
+# vp-app GUI を起動
+vp app start
+
+# performer handoff (atomic)
+vp flow handoff feat-api --task-spec task.md --mode auto
+
+# 並列追跡
+vp flow progress
 ```
 
 ## Commands
@@ -59,58 +47,50 @@ Claude Code スラッシュコマンド:
 | `/vantage-point:dashboard` | フルダッシュボードを初期化（3ペイン） |
 | `/vantage-point:clear` | ペインのコンテンツをクリア |
 
-## MCP ツール
+## Skills
 
-### コンテンツ表示
+| Skill | Description |
+|-------|-------------|
+| `vantage-point` | MCP ツール一覧、アーキテクチャ、典型シナリオ |
+| `dev-flow` | Conductor × Performer × Memory orchestration 6 phase 開発フロー |
 
-| ツール | 説明 |
-|--------|------|
-| `show` | コンテンツを表示（markdown/html/log/url） |
-| `clear` | ペインをクリア |
+## MCP Tools (主要)
 
-### ペイン操作
-
-| ツール | 説明 |
-|--------|------|
-| `toggle_pane` | ペインの表示/非表示切り替え |
-| `split_pane` | ペインを水平/垂直に分割 |
-| `close_pane` | ペインを閉じる |
-
-### Canvas
+### Canvas / Display
 
 | ツール | 説明 |
 |--------|------|
-| `open_canvas` | ネイティブCanvasウィンドウを開く |
-| `close_canvas` | Canvasウィンドウを閉じる |
-| `capture_canvas` | CanvasのスクリーンショットをPNG保存 |
+| `show` / `clear` | コンテンツ表示 (markdown/html/log/url)・クリア |
+| `read_pane` / `list_canvas` | Canvas pane 内容の取得・一覧 |
+| `capture_canvas` | vp-app window スクリーンショット (PNG) |
+| `switch_lane` | active lane の切替 |
 
-### ファイル監視
-
-| ツール | 説明 |
-|--------|------|
-| `watch_file` | ログファイルをリアルタイム監視・表示 |
-| `unwatch_file` | ファイル監視を停止 |
-
-### Ruby VM（Heaven's Door）
+### Performer Lane
 
 | ツール | 説明 |
 |--------|------|
-| `eval_ruby` | Rubyコード/ファイルを実行し結果を表示（短命実行） |
-| `run_ruby` | Rubyコード/ファイルをデーモンプロセスとして起動 |
-| `stop_ruby` | 実行中のRubyデーモンプロセスを停止 |
-| `list_ruby` | 実行中のRubyデーモンプロセス一覧を表示 |
+| `add_performer` / `delete_performer` | performer lane の作成・削除 |
+| `list_lanes` | Lane 一覧 (`performer_status`, `mailbox_addresses`) |
 
-### システム
+> lane への text 注入・console 読取・ファイル監視は CLI のみ: `vp lane nudge` / `vp lane capture` / `vp file watch`
+
+### dev-flow
 
 | ツール | 説明 |
 |--------|------|
-| `restart` | Processサーバーを再起動（セッション状態は保持） |
-| `permission` | ツール実行の権限をユーザーに確認（`--permission-prompt-tool` 用） |
+| `flow_handoff` | performer 作成 + wire_send + nudge を atomic 実行 |
+| `flow_progress` | 全 performer の git status + flow_state 集約 |
 
-## Requirements
+### wiremsg
 
-- Vantage Point CLI (`vp`) がインストール済み
-- Process が未起動でもMCPツール呼び出し時に自動起動
+| ツール | 説明 |
+|--------|------|
+| `wire_send` / `wire_recv` | inter-agent message 送受信 |
+| `wire_inbox` / `wire_ack` | 未読確認 / command 受領確認 |
+| `wire_thread` | thread 系譜 trace |
+| `delegate` / `complete` / `respond` | async future 型 task 委譲 |
+
+詳細: `skills/vantage-point/reference/mcp-tools.md`
 
 ## License
 
