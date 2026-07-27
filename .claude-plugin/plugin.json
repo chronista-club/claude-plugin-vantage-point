@@ -1,18 +1,19 @@
 {
   "name": "vantage-point",
-  "description": "AI-native development environment — Canvas visualization, performer lanes, wiremsg inter-agent messaging, and dev-flow orchestration for Claude Code",
-  "version": "0.20.0",
+  "description": "AI-native development environment — board visualization, parallel lanes, wire inter-agent messaging, dev-flow orchestration, and GUI live tuning for Claude Code",
+  "version": "0.21.0",
   "author": {
     "name": "Chronista Club",
     "url": "https://github.com/chronista-club"
   },
   "repository": "https://github.com/chronista-club/claude-plugin-vantage-point",
   "keywords": [
-    "canvas",
-    "performer-lane",
-    "wiremsg",
+    "board",
+    "lane",
+    "wire",
     "dev-flow",
-    "orchestration"
+    "orchestration",
+    "gui-tuning"
   ],
   "license": "MIT",
   "homepage": "https://github.com/chronista-club/claude-plugin-vantage-point"
