@@ -8,6 +8,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-07-27
+
+VP **v0.46 → v0.57**（12 release 分）の乖離を一括解消。plugin は v0.44/v0.45 想定のまま止まっていた。
+
+### Changed
+
+- **MCP tool surface を 20 → 26 に同期**（SSOT = `crates/vantage-point/src/mcp.rs` + `src/mcp/{editor,layout}.rs` + `src/generated/agent_tools.rs`、後者は `schema/vp-agent.kdl` 由来）:
+  - 撤去: `read_pane` / `list_canvas` → **`read_board`** に統合（id / title / content_type / 全文を newest-first で返す）
+  - 改名: `capture_canvas` → **`capture_window`**
+  - param 差し替え: `show` / `clear` の `pane_id` → **`scope`**（`lane` 一択、dead field だった `pane_id` は消滅）/ `add_performer` / `flow_handoff` の `stand` → **`agent`**（値 `echoes` → `claude`、`codex` / `grok` / `opencode` / `shell` が選択肢に追加）/ `list_lanes` の `kind` `conductor` → **`root`**、`mailbox_addresses.canvas` → **`board`**、top-level に `repo_addresses` / `machine_addresses` 追加
+  - `restart` に `open_viewer` param
+- **v0.56 命名エピック（PR #936〜#946、JoJo 由来命名の全撤去）へ全面追随**。SSOT = VP 本体 `CLAUDE.md`「アーキテクチャ命名体系」。Paisley Park/PP/Canvas → **board** / Gold Experience → **runner** / Star Platinum・SP・project（容器の義）→ **repo** / TheWorld・World → **daemon** / Echoes → **conversation** / Stand → **agent**（engine 軸）+ component + service に分解 / The Hand → **shell** / Hermit Purple・Stone Free → 消滅 / `@world` → **`@machine`** / act（chat・tui）→ **mode**（gui・tui）。旧 doc 読解用の対応表を SKILL.md / reference / README に掲載
+- **lane address の構造変更に追随**（doc 44 P2）: `<repo>/conductor` / `<repo>/performer/<name>` → **`<repo>/root` / `<repo>/<name>`**（`/performer/` セグメント撤去）。旧形は `LanePool::parse_address` が受理して正規化されるが、新規記述は新形に統一。wire address（`agent@<repo>` / `agent@<repo>/<name>`）は不変
+- **`skills/dev-flow/SKILL.md` を lane 対等モデルで全面再設計**（v0.3.3 → v0.4.0）。VP が `LaneKind`（Conductor / Performer）を撤去し「lane は役割状態を持たない」(doc 44 D4) へ舵を切ったのを受け、「Conductor という役割」と「control surrender という関係」の二重表現を **control の所在だけ**に畳んだ。`root` は予約名であって役割ではないこと、`add_performer` / `flow_handoff` の performer は「lane を作って仕事を渡す動詞」であって種族名ではないことを明記。6 state FSM（`idle` / `working` / `hitl_pending` / `awaiting_user` / `completed` / `stuck`）と `control_surrender` は VP 側で健在なため保持し、表示ラベル（⏸ / 🤖 / 🤝 / 🙋 / ✅ / ⚠）を追記
+- **`skills/vantage-point/SKILL.md` を全面改訂**（5 柱 → 6 柱）。architecture 図・tool 表・トラブルシューティング・dogfooding tip を現行語彙へ。旧名で書かれた doc / memory を読むための対応表を追加
+- **CLI 新サーフェスを反映**: 新 top-level `vp now` / `vp events` / `vp repos` / `vp auth` / `vp sync`、`vp lane` に fork / status / cleanup / history / last-session / resume-failed / capture / slots / slot-new / slot-close / origin、`vp wire` に discover / hook-check / deleg-thread / watch-supervised、`vp shot` の `--region` / `--rect` / `--series`（MCP `capture_window` に対し **CLI が上位互換**）
+- `hooks/scripts/lane-status.sh` の語彙と案内文を現行化（「performer 環境」→「lane (作業台)」、新 lane address の明示、`vp lane ls --detail` / `vp lane status` を案内に追加）。lane 判定 pattern `/\.vp/lanes/` は現行のままで正しいことを実機確認
+- `plugin.json` の description / keywords を新語彙へ（`canvas`/`performer-lane`/`wiremsg` → `board`/`lane`/`wire`/`gui-tuning`）
+
+### Added
+
+- **GUI live tuning を skill 本編の柱として追加**（doc 48 / doc 49）:
+  - `editor_fields` / `editor_values` / `editor_set` — GUI に bind された design knob の列挙・読み・設定。**書き戻し専用 tool は設計上存在しない**（doc 48 D-B）: ユーザーが slider で探索 → AI が `editor_values` で読む → **AI 自身の Edit で source に落とす**、が正規経路で、これにより探索が `git diff` に出る
+  - `layout_get` / `layout_set` / `layout_history` — pane layout（creo-ui-layout の attention field）の取得・設定・settle-log。`notation`（`|` 列区切り / `/` 縦積み / `~` floating）は構造のみを表しサイズは持たず、サイズは `attention` の領分。変更は author `ai` として settle-log に記録され、全 pane が隠れる指定は reject
+- **`update` tool を軸にした board 運用パターン**を追加。進捗表・テスト結果・設計の現行形は `show` で積み増すのではなく `read_board` → `update` で **1 枚を書き換える**。board が「流れるログ」から「現在の状態を映す面」になる。未知 id は意図的に loud fail（黙って重複を作らない）
+- **agent engine 選択の指針**を dev-flow skill に追加。`claude`（default）/ `codex` / `grok` / `opencode` / `shell` の使い分けと、**engine は不変属性**という規律（engine を替える操作は存在しない — 会話の文脈は engine 間を移動できないため、乗り換えるなら隣に新しい lane を立てる）。`shell` lane も wire の市民権を持つ（市民権は席の env に付く）
+- **「MCP ↔ CLI pair invariant の例外」を明文化**。`read_board` / `update` / `editor_*` / `layout_*` の 8 本は **MCP 専用**（対象が GUI の生きた状態 = board item の id、画面上の CSS var、pane の attention field で、CLI の一発実行モデルでは掴めない）。逆に `vp shot` は `capture_window` の上位互換になっており、pair は「同じ logic を両方から」であって「同じ機能量」ではないことを注記
+- dev-flow skill に「落とし穴」表を追加（`/performer/` 付き address、`stand` param、受信 ≠ ack、board の積み増し、engine 途中変更、`stuck` の見分け）
+
+### Removed
+
+- 陳腐化した未 merge ローカルブランチ 2 本を削除: `docs/sync-vp-v0.45`（PR #13 で main にマージ済みの残骸）/ `docs/sync-vp-v0.40-conductor-performer`（v0.40 時代、main が先行して完全に陳腐化）
+
 ## [0.20.0] - 2026-07-14
 
 ### Changed

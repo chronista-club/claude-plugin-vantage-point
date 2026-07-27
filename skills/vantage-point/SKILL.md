@@ -1,50 +1,90 @@
 ---
 name: vantage-point
-description: AI ネイティブ開発環境 — Canvas 視覚化、並列 performer 展開、wiremsg inter-agent 通信、dev-flow orchestration を実現する MCP server。Claude Code 用 dashboard tool
-version: 0.20.0
+description: AI ネイティブ開発環境 — board 視覚化、並列 lane 展開、wire inter-agent 通信、dev-flow orchestration、GUI live tuning を実現する MCP server。Claude Code 用 dashboard tool
+version: 0.21.0
 tags:
   - dashboard
-  - canvas
+  - board
   - mcp
   - inter-agent
-  - conductor-performer
+  - lane
   - dev-flow
+  - gui-tuning
 ---
 
 # Vantage Point
 
-> **AI ネイティブ開発環境** — Claude Code セッション中に Canvas 視覚化、 並列 performer 展開、 wiremsg inter-agent 通信、 dev-flow orchestration を実現する MCP server。
+> **AI ネイティブ開発環境** — Claude Code セッション中に board 視覚化、並列 lane 展開、wire inter-agent 通信、dev-flow orchestration、GUI live tuning を実現する MCP server。
 
-VP は単なる「ブラウザビューア」 ではなく、 開発体験そのものを構成する 5 つの柱を提供する:
+VP は「ブラウザビューア」ではなく、開発体験そのものを構成する **6 つの柱**を提供します:
 
-1. **Canvas** (Paisley Park 🧭) — markdown / HTML / URL / ログを視覚化
-2. **Performer Lane** (Stone Free 🧵) — conductor + performer の並列開発環境
-3. **wiremsg** — project 跨ぎ inter-agent 通信 (ccwire / msgbox 廃止、 wiremsg に一本化)
-4. **dev-flow primitives** — `flow_handoff` / `flow_progress` で Conductor × Performer orchestration
-5. **Screenshot** — `vp shot` / `capture_canvas` で UI 状態を PNG 化、 Read tool で AI が視認
+1. **board 🧭** — markdown / HTML / URL / ログを貼る台。item は id を持ち、`update` で書き換えられる
+2. **lane** — 作業台（cwd / branch / board / layout を持つ checkout）。root + performers の並列開発環境
+3. **wire** — repo 跨ぎ inter-agent 通信（永続 thread + delivery policy）
+4. **dev-flow** — `flow_handoff` / `flow_progress` で並列 orchestration
+5. **GUI live tuning** — `editor_*` / `layout_*` で AI が GUI を直接調律（HITL ループ）
+6. **screenshot** — `capture_window` / `vp shot` で UI 状態を PNG 化、Read tool で AI が視認
 
-詳細 architecture: 関連 memory `mem_1CaVnfJRgWtuRgZD9yQSoV` (舞台-役者-演目 mental model)
+---
 
-> **用語注** (VP v0.40+): orchestration 側は **conductor** (= 旧 lead)、 実装主体は **performer** (= 旧 wing / worker)。 lane address は `<project>/conductor` / `<project>/performer/<name>`、 wire address は `agent@<project>` / `agent@<project>/<performer-name>`。
+## 語彙（v0.56 命名エピックで確定）
+
+JoJo 由来の愛称は **VP v0.56（PR #936〜#946）で全廃**され、機能名へ移行しました。SSOT = VP 本体 `CLAUDE.md`「アーキテクチャ命名体系」。
+
+```
+daemon ⚙️  (Process Manager / 常駐デーモン)
+  ├── repo 📦  (Repo Runtime / 各機能が同居する場)
+  │     ├── conversation 💬  (AI との会話層 — host / 翻訳 / transcript)
+  │     ├── board 🧭  (Information Navigator / 貼る台)
+  │     └── runner 🌿  (Code Runner)
+  ├── devices 🧲  (machine scope / device registry)
+  └── device_io 🌫️  (lane scope / device I/O)
+
+軸: agent（claude / codex / grok / opencode / shell）× mode（tui / gui）
+GUI 容器 = Pane（app 専用語）。部品 = component / 常駐 = service。総称「Stand」は廃止。
+```
+
+**旧名で書かれた doc / memory を読むときの対応表**:
+
+| 旧 | 現行 |
+|---|---|
+| Paisley Park / PP / Canvas | **board** |
+| Gold Experience / GE | **runner** |
+| Star Platinum / SP / project（容器の義） | **repo** |
+| TheWorld / World | **daemon** |
+| Echoes | **conversation** |
+| Stand / stand | **agent**（engine 軸）/ component / service に分解 |
+| The Hand | **shell**（agent の一種） |
+| `@world` | **`@machine`** |
+| act（chat / tui） | **mode**（gui / tui） |
+
+### address
+
+| 種別 | 形 | 例 |
+|---|---|---|
+| **lane address** | `<repo>/root` / `<repo>/<name>` | `vantage-point/root` / `vantage-point/feat-api` |
+| **wire address** | `agent@<repo>` / `agent@<repo>/<name>` | `agent@vantage-point/feat-api` |
+| **board inbox** | `board@<repo>/<name>` | `board@vantage-point/feat-api` |
+
+> ⚠️ **lane address から `/performer/` セグメントが消えました**（doc 44 P2）。旧形 (`<repo>/conductor` / `<repo>/performer/<name>`) は parse 側が受理して正規化しますが、**新しく書く記述は新形で**。
+>
+> **`root` は役割ではなく予約名**です。`LaneKind`（Conductor / Performer）は撤去され、「lane は役割状態を持たない」(doc 44 D4) になりました。lane は全て対等で、root lane は *たまたま開発起点である* lane にすぎません。orchestrate するかどうかは運用の話であって、lane の属性ではない。
 
 ---
 
 ## クイックスタート
 
 ```bash
-# vp-app GUI を起動 (TheWorld:32000 が無ければ auto-launch)
-vp app start
-
-# project SP の起動は vp-app sidebar から expand → auto-spawn
+vp app start     # vp-app GUI を起動（daemon が無ければ auto-launch）
 ```
 
-VP Process が起動していなくても、 MCP ツールを呼ぶと自動的に Process を起動する。
+repo runtime は vp-app sidebar から expand → auto-spawn。起動していなくても、MCP ツールを呼べば自動的に起動します。
 
 ---
 
-## 5 つの典型シナリオ
+## 典型シナリオ
 
-### 1. Canvas に Markdown を表示
+### 1. board に貼る
 
 ```
 mcp__vantage-point__show
@@ -53,226 +93,239 @@ mcp__vantage-point__show
   title: "進捗"
 ```
 
-### 2. ログをリアルタイム監視 (CLI のみ)
+### 2. 貼ったものを書き換える（積み増さない）
+
+```
+mcp__vantage-point__read_board      → item の id を取る
+mcp__vantage-point__update
+  id: "<その id>"
+  content: "# 進捗\n- A 完了\n- B 完了"
+```
+
+進捗表・テスト結果・設計の現行形は **1 枚を update** する。board が「流れるログ」ではなく「現在の状態を映す面」になります。
+
+### 3. ログをリアルタイム監視（CLI のみ）
 
 ```bash
 vp file watch /tmp/build.log right --format json_lines --filter "INFO|WARN|ERROR"
-# 停止: vp file unwatch right
+vp file unwatch right   # 停止
 ```
 
-→ 新規行が出るたびに Canvas pane に追記。 MCP tool (`watch_file`) は撤去済み、 CLI のみ。
-
-### 3. 並列 performer 展開 + handoff
+### 4. 並列 lane 展開 + handoff
 
 ```
 # 推奨: atomic handoff
 mcp__vantage-point__flow_handoff
   name: "feat-api"
   task_spec: "<markdown 仕様>"
-  mode: "auto" | "hitl"   # default: hitl
+  mode: "auto" | "hitl"      # default: hitl
+  agent: "claude"            # claude(default) / codex / grok / opencode / shell
+  model: "opus"              # 機械的作業=sonnet / 中核設計=opus
 
 # 低レベル fallback
-mcp__vantage-point__add_performer
-  name: "feat-api"
-  branch: "user/feat-api"
-mcp__vantage-point__wire_send
-  to: ["agent@<project>/feat-api"]
-  body: { kind: "task", category: "command", task_spec: "..." }
-# nudge は CLI で (MCP に lane_nudge は無い):
-#   vp lane nudge <project>/performer/feat-api "task が届いています。 wire_recv で確認して着手。"
+mcp__vantage-point__add_performer  name: "feat-api", branch: "user/feat-api"
+mcp__vantage-point__wire_send      to: ["agent@<repo>/feat-api"], body: { kind: "task", category: "command", task_spec: "..." }
+# nudge は CLI で（MCP に lane_nudge は無い）:
+#   vp lane nudge <repo>/feat-api "task が届いています。wire_recv で確認して着手。"
 ```
 
-`flow_progress` で全 performer の git status + unread wire + `flow_state` / `control_surrender` を 1 view で監視。
+`flow_progress` で全 lane の git status + 未読 wire + `flow_state` / `control_surrender` を 1 view で監視。
 
-### 4. project 跨ぎ inter-agent 通信 (wiremsg)
+### 5. repo 跨ぎ inter-agent 通信
 
 ```
-# 送信 (reply_to なし = 新規 thread の root)
-mcp__vantage-point__wire_send
-  to: ["agent@creo-memories"]
-  body: { text: "review request", category: "command" }
-
-# 受信 (自分が参加する全 wire thread の未読 message、 timeout 待ち)
-mcp__vantage-point__wire_recv
-  timeout: 10
-
-# 未読数だけ確認 (cursor 不触り)
-mcp__vantage-point__wire_inbox
-
-# 処理後 ack (category: command の再掲示を止める)
-mcp__vantage-point__wire_ack
-  message_id: "<id>"
-
-# thread 系譜の取得
-mcp__vantage-point__wire_thread
-  message_id: "<message id>"
+mcp__vantage-point__wire_send    to: ["agent@creo-memories"], body: { text: "review request", category: "command" }
+mcp__vantage-point__wire_inbox   # 未読数だけ（cursor 不触り）
+mcp__vantage-point__wire_recv    timeout: 10
+mcp__vantage-point__wire_ack     message_id: "<id>"   # 処理"後"に
+mcp__vantage-point__wire_thread  message_id: "<id>"   # 系譜を辿る
 ```
 
-ccwire / msgbox は廃止、 wiremsg に一本化。 thread は `prev` parent-pointer で表現される (`thread_id` は無い)。
+thread は `prev` parent-pointer で表現されます（`thread_id` は無い）。
 
-### 5. UI スクショで AI 自身が視認
+### 6. GUI を AI が調律する（HITL ループ）
+
+```
+mcp__vantage-point__editor_fields                              # 弄れる knob を知る
+mcp__vantage-point__editor_set   id: "sb.text.base", value: 1.75   # 画面が即変わる
+mcp__vantage-point__editor_values                              # ユーザーの手調整も含めて回収
+# → AI が自分の Edit で source に落とす（書き戻し tool は無い。これが正規経路 = doc 48 D-B）
+```
+
+```
+mcp__vantage-point__layout_get   scope: "app"
+mcp__vantage-point__layout_set   scope: "app", notation: "console | board/runner", attention: { runner: 0 }
+mcp__vantage-point__layout_history  scope: "app"   # 人間が組んだ形 / AI の変更を監査
+```
+
+### 7. 画面を見て確かめる
 
 ```bash
-vp shot -o /tmp/vp-shot.png
-# or
-mcp__vantage-point__capture_canvas
-  path: "/tmp/vp-canvas.png"
+vp shot -o /tmp/vp.png --region main       # CLI が上位互換（--region / --rect / --series）
+```
+```
+mcp__vantage-point__capture_window  path: "/tmp/vp.png"
 ```
 
-→ Read tool で PNG を視覚 review 可能。
+→ Read tool で PNG を視覚 review。
 
 ---
 
-## MCP Tools 一覧 (VP v0.45+、 全 20 個 — surface は v0.44 から不変)
+## MCP Tools 一覧（VP v0.57、全 26 個）
 
-### Display / Canvas (Paisley Park 🧭)
-
-| Tool | 用途 |
-|------|------|
-| `show` | コンテンツ表示 (markdown/html/log/url)。 全 show は現 lane の PP body stack に積まれる |
-| `clear` | pane content clear |
-| `read_pane` | Canvas pane の full source を取得 (memory 保存向け) |
-| `list_canvas` | Canvas 上の pane 一覧 (title / content_type / preview) |
-| `switch_lane` | vp-app の active lane 切替 (`conductor` or performer name) |
-| `capture_canvas` | vp-app window 全体の PNG capture |
-
-### Performer Lane (Stone Free 🧵)
+### board 🧭
 
 | Tool | 用途 |
 |------|------|
-| `add_performer` | performer lane を spawn (worktree + echoes)。 `stand` / `base` / `model` 指定可。 旧名 `add_wing` / `add_worker` |
-| `delete_performer` | performer lane を片付け (PTY/workspace cleanup、 `cleanup: false` で dir 残置)。 旧名 `delete_wing` / `delete_worker` |
-| `list_lanes` | project 内全 Lane 一覧 (Conductor + Performers、`performer_status` / `mailbox_addresses` 付き)。 `kind` / `state` filter 可 |
+| `show` | 現 lane の board に item を貼る（markdown / html / log / url） |
+| `update` | board item を **id 指定で in-place 置換**（位置と title は保持） |
+| `read_board` | board の全 item を id / title / content_type / 全文つきで取得（newest-first） |
+| `clear` | board を clear |
+| `capture_window` | vp-app window 全体を PNG capture |
+| `switch_lane` | active lane 切替（`root` or performer 名） |
 
-> lane への text 注入 (`lane_nudge`) と console 読み取りは **CLI のみ**: `vp lane nudge <lane> <text>` / `vp lane capture <lane>`
-
-### dev-flow primitives
-
-| Tool | 用途 |
-|------|------|
-| `flow_handoff` | performer 作成 + wire_send + nudge を atomic (= 失敗時 rollback)。 `mode` (hitl default / auto)、 `stand` / `base` / `model` / `nudge` 指定可 |
-| `flow_progress` | 全 performer の git status + unread wire + `flow_state` (6 state) / `control_surrender` 集約 |
-
-### wiremsg (inter-agent 通信)
+### lane
 
 | Tool | 用途 |
 |------|------|
-| `wire_send` | wire address に送信。 `reply_to` なし = 新規 thread root |
-| `wire_recv` | 未読 message 受信 (読むと cursor 前進) |
-| `wire_inbox` | 未読数だけ確認 (cursor 不触り) |
-| `wire_ack` | `category: command` msg の受領確認 |
-| `wire_thread` | message 系譜 trace (root-first、 cursor 不触り) |
+| `add_performer` | performer lane を作成（lane clone + spawn）。`agent` / `base` / `model` 指定可 |
+| `delete_performer` | performer lane を片付け（`cleanup: false` で dir 残置） |
+| `list_lanes` | 全 lane 一覧（`performer_status` / `mailbox_addresses` / `repo_addresses` 付き）。`kind` = `root` \| `performer` |
 
-### Delegation (async future primitive)
+> lane への text 注入と console 読み取りは **CLI のみ**: `vp lane nudge <lane> <text>` / `vp lane capture <lane>`
 
-| Tool | 用途 |
-|------|------|
-| `delegate` | task を doer lane に委譲し turn を park (= spin-wait 不要) |
-| `complete` | 委譲された task の outcome 報告 (`done` / `failed` / `needs_input`) |
-| `respond` | doer の `needs_input` question への回答 |
-
-### Process
+### dev-flow
 
 | Tool | 用途 |
 |------|------|
-| `restart` | VP Process restart (session 状態保持) |
+| `flow_handoff` | lane 作成 + `wire_send` + nudge を atomic（失敗時 rollback） |
+| `flow_progress` | 全 lane の git status + 未読 wire + `flow_state`（6 state）/ `control_surrender` 集約 |
 
-**MCP には存在しない（CLI のみ）**: pane 操作 (`vp pane toggle/close/split`)、 file 監視 (`vp file watch/unwatch`)、 port 管理 (`vp port`)、 lane nudge / capture (`vp lane nudge` / `vp lane capture`)
+### wire
 
-**廃止済** (旧 doc に残っていたもの、 #625 tool 整理ほか):
-- `tmux_split` / `tmux_capture` / `tmux_dashboard` / `tmux_agent_*` → `vp lane nudge` / `vp lane capture`
-- `add_wing` / `delete_wing` → `add_performer` / `delete_performer`
-- `open_canvas` / `close_canvas` / `split_pane` (MCP) → vp-app 常駐 Canvas + Frame Engine
-- `eval_ruby` / `run_ruby` / `stop_ruby` / `list_ruby` → 削除
-- `capture_terminal` → `vp shot`
-- `toggle_pane` / `close_pane` / `watch_file` / `unwatch_file` / `port_*` / `permission` (MCP) → CLI 側に集約 or 削除
+| Tool | 用途 |
+|------|------|
+| `wire_send` | wire address に送信。`reply_to` なし = 新規 thread root |
+| `wire_recv` | 未読受信（読むと cursor 前進） |
+| `wire_inbox` | 未読数だけ確認（cursor 不触り） |
+| `wire_ack` | `category: command` の受領確認（**処理後**に打つ） |
+| `wire_thread` | message 系譜 trace（root-first、cursor 不触り） |
+
+### delegation（async future）
+
+| Tool | 用途 |
+|------|------|
+| `delegate` | task を doer lane に委譲し turn を park（spin-wait 不要） |
+| `complete` | 委譲 task の outcome 報告（`done` / `failed` / `needs_input`） |
+| `respond` | doer の `needs_input` への回答 |
+
+### GUI live tuning
+
+| Tool | 用途 |
+|------|------|
+| `editor_fields` | live-tunable な design knob 一覧（id / label / type / cssVar / constraints） |
+| `editor_values` | 現在値を読む（**ユーザーの手調整も含む**） |
+| `editor_set` | knob を設定（即座に画面反映、永続化はしない） |
+| `layout_get` | pane layout（notation / attention / shares / locks）を読む |
+| `layout_set` | pane layout を設定（即適用 + settle-log に author `ai` で記録） |
+| `layout_history` | settle-log（`human` / `ai` / `scene` の変更履歴） |
+
+### process
+
+| Tool | 用途 |
+|------|------|
+| `restart` | repo runtime restart（session 状態保持） |
+
+**詳細な param は `reference/mcp-tools.md`**。
 
 ---
 
 ## MCP ↔ CLI pair invariant
 
-VP は **「同じ logic を MCP (= AI agent 用) + CLI (= human 用) 両方から expose する」** を invariant として持つ。
+VP は「同じ logic を MCP（AI 用）と CLI（人間用）の両方から expose する」を invariant として持ちます。**現在 2 方向に例外があります** — これを知っていると「どちらで叩くか」の判断が速くなります。
 
-### pair table (主要)
+### MCP のみ（CLI pair なし）
 
-| MCP tool | CLI subcommand | 備考 |
-|---|---|---|
-| `show` | `vp pane show <content>` | `--format` / `--title`。 `--append` は CLI のみ |
-| `clear` | `vp pane clear` | `--pane-id` |
-| `switch_lane` | `vp lane switch <name>` | `conductor` or performer name |
-| `add_performer` | `vp lane new <name> <branch>` | `--isolation worktree\|clone` は CLI のみ |
-| `delete_performer` | `vp lane rm <name>` | |
-| `list_lanes` | `vp lane ls --detail` | default `vp lane ls` は fs scan 簡易出力 |
-| `flow_handoff` | `vp flow handoff <name> --task-spec <file>` | `--mode auto\|hitl` (default hitl) / `--no-nudge` |
-| `flow_progress` | `vp flow progress` | `--format json\|table` |
-| `wire_send` | `vp wire send` | `--to` / `--body` / `--reply-to` / `--category` / `--world` |
-| `wire_recv` | `vp wire recv` | 連続 subscribe は `vp wire watch` |
-| `wire_inbox` | `vp wire inbox` | read-only |
-| `wire_ack` | `vp wire ack` | |
-| `wire_thread` | `vp wire thread` | |
-| `capture_canvas` | `vp shot` | CLI は canonical screenshot |
-| `restart` | `vp restart-all` | 全 Process + TheWorld 再起動 |
+`read_board` / `update` / `editor_fields` / `editor_values` / `editor_set` / `layout_get` / `layout_set` / `layout_history`
 
-**CLI のみ（MCP pair なし）**: `vp lane nudge <lane> <text>` / `vp lane capture <lane>` / `vp pane toggle|close|split` / `vp file watch|unwatch` / `vp port show|url|roles|layout|slot`
+→ いずれも対象が **GUI の生きた状態**（board item の id、画面上の CSS var、pane の attention field）。CLI の一発実行モデルでは掴めないため。
+
+### CLI のみ（MCP pair なし）
+
+| CLI | 用途 |
+|---|---|
+| `vp lane nudge` / `vp lane capture` | lane への text 注入 / console 読み取り |
+| `vp lane fork` / `status` / `cleanup` / `history` / `origin` | lane の派生・棚卸し・帳簿 |
+| `vp lane slots` / `slot-new` / `slot-close` | console slot の増減 |
+| `vp pane split` / `close` / `toggle` | pane 操作 |
+| `vp file watch` / `unwatch` | ログの実時間監視 |
+| `vp wire watch` / `watch-supervised` / `discover` / `hook-check` / `deleg-thread` | 購読・federation discovery・hook・委譲観測 |
+| `vp now` | session の「今なにを」を 1 行報告（**サブタスクの切れ目ごとに打つ想定**） |
+| `vp events` | event log（agent の episodic memory） |
+| `vp repos` / `vp sync` / `vp auth` | repo 管理・ghost repo 除去・Creo ID 認証 |
 
 ### `list_lanes` vs `vp ps` vs `vp lane ls`
 
-- **`list_lanes`** = 現 project の **全 Lane (Conductor + Performers)**。 `performer_status` / `mailbox_addresses` 詳細付き
-- **`vp ps`** = TheWorld 配下の **全 project SP** 一覧 (port + pid + project_name)
-- **`vp lane ls`** = fs scan 簡易表示 (`name<TAB>branch<TAB>path`)。 SP 不要
-- **`vp lane ls --detail`** = `list_lanes` の CLI pair。 SP 稼働中のみ
+- **`list_lanes`** — 現 repo の全 lane。`performer_status` / `mailbox_addresses` 付き
+- **`vp ps`** — daemon 配下の全 repo runtime 一覧
+- **`vp lane ls`** — fs scan の簡易表示（runtime 不要）
+- **`vp lane ls --detail`** — `list_lanes` の CLI pair（runtime 稼働中のみ）
 
 ---
 
-## アーキテクチャ概要
+## アーキテクチャ
 
 ```
-TheWorld 👑 (32000) — 常駐 daemon、 全 SP を管理
+daemon ⚙️ — 常駐、全 repo runtime を統括
   │
-  ├── Hermit Purple 🍇 — External Control (MIDI / MCP)
-  │
-  └── Star Platinum ⭐ (project SP, 33xxx) — Project 単位の容器
-        ├── Echoes 💬 — Coding Assistant (Claude CLI。 Act I = TUI console / Act II = chat GUI + HITL 4 面: 質問 / 中断 / permission / plan 承認 — v0.45)
-        ├── Paisley Park 🧭 — Information Navigator (Canvas / WebView + Frame Engine)
-        ├── Gold Experience 🌿 — Code Runner (process 管理)
-        └── (per slot) Lane — PTY セッション (Conductor + Performers)
-              ├── The Hand 🤚 — 素 shell base
-              └── Echoes 💬 — 任意 LLM auto-launch
+  └── repo 📦 (Repo Runtime) — repo 単位の容器
+        ├── conversation 💬 — AI との会話層（host / 翻訳 / transcript）
+        │                     mode: tui（PTY console）/ gui（ChatView + HITL 4 面）
+        ├── board 🧭 — 貼る台（item は id を持つ）
+        ├── runner 🌿 — Code Runner（process 管理）
+        └── lane — 作業台（cwd / branch / board / layout を持つ checkout）
+              ├── root      — 開発起点 lane（予約名。役割ではない）
+              └── <name>    — performer lane（worktree + agent session）
+                    agent: claude / codex / grok / opencode / shell
 ```
 
-詳細メンタルモデル: `mem_1CaVnfJRgWtuRgZD9yQSoV` (舞台-役者-演目)
+lane は全て対等です（doc 44 D4）。「orchestrate する側 / される側」は **運用上の役割**であって、lane が持つ状態ではありません。
+
+> VP は更に「lane に働き手（worker）が 0..N 人座る」モデル（doc 54）へ向かっていますが、**これは起草段階**で実装は段階的です。現行の実サーフェスは上図。
 
 ---
 
-## Canvas の表示モデル (PP Canvas Stack)
+## board の表示モデル
 
-Canvas は **vp-app 常駐の統合ウィンドウ**。 lane ごとに PP (Paisley Park) body を持ち、 `show` されたコンテンツは現 lane の **PP body stack に積まれる**（doc 19 PP Canvas Stack Model）。
+- `show` した内容は現 lane の board に **item として積まれる**。各 item は **id** を持つ
+- **`update` で id 指定の in-place 置換ができる** — 未知 id は意図的に loud fail（黙って重複を作らない）
+- `pane_id` は撤去済み。現行は `scope` のみで値は `lane` 一択
+- `append` は MCP に無く CLI (`vp pane show --append`) のみ
+- lane を切り替えると board も切り替わる（`switch_lane`）
 
-- `show` の `pane_id` は**現在無視される**（dead field、 後方互換で残置）。 旧 3-pane (main/left/right) モデルは廃止
-- `append` パラメータは MCP には無い（CLI `vp pane show --append` のみ）
-- lane の切替は `switch_lane`（conductor / performer name）
-
----
-
-## コンテンツタイプ (`show` の content_type)
+### content_type
 
 | タイプ | 説明 |
 |--------|------|
-| `markdown` | Markdown 形式 (**デフォルト・推奨**) |
-| `html` | HTML 形式 |
-| `log` | ログ形式 (追記向け) |
-| `url` | 外部 URL を iframe で埋め込み表示 |
+| `markdown` | **デフォルト・推奨** |
+| `html` | 精密な視覚レイアウトが要るとき（dashboard / 色付き図） |
+| `log` | ログ形式（追記向け） |
+| `url` | 外部 URL を iframe 埋め込み |
 
 ---
 
-## wiremsg delivery policy
+## wire delivery policy
 
-`wire_send` の `body.category` で delivery を制御:
+`wire_send` の `body.category` で delivery を制御します:
 
 | category | 挙動 |
 |----------|------|
-| `command` | **default**。 受信者が `wire_ack` するまで再掲示 (= nudge loop) |
-| `event` / `data` / `state` / `log` | fire-and-forget。 再掲示なし |
+| `command` | **default**。受信者が `wire_ack` するまで再 nudge |
+| `event` / `data` / `state` / `log` | fire-and-forget、再掲示なし |
+
+- **store が真実、push は加速**: message は lane 単位の store に届く（配送不能な状態は存在しない）。nudge は「今の代表が agent のときだけ肩を叩く」加速装置
+- **ack は処理後に**: `wire_recv` で受信しただけでは ack にならない。未 ack の `command` は再掲示され続ける
+- 未 ack の手紙は後任に引き継がれます（受領即 ack が「後任に二重配送させない礼儀」）
 
 ---
 
@@ -280,76 +333,31 @@ Canvas は **vp-app 常駐の統合ウィンドウ**。 lane ごとに PP (Paisl
 
 | 症状 | 対処 |
 |------|------|
-| SP が「stale」 (sidebar 緑だが console 壊れ) | vp-app sidebar の 🔄 (Restart SP) ボタン |
-| Lane が dead 化 (claude zombie) | Lifecycle monitor が 5s 以内に検知 → sidebar 赤 dot → 手動 respawn |
-| `mcp_call timeout` | `restart` / `vp restart-all` で復旧 |
-| `wire_*` が動かない | SP 起動確認 (`vp app start` → sidebar expand)、 wire address 再確認 (`agent@<project>` / `agent@<project>/<performer>`) |
+| repo runtime が stale（sidebar 緑だが console 壊れ） | vp-app sidebar の 🔄（Restart）ボタン |
+| lane が dead 化 | lifecycle monitor が 5s 以内に検知 → sidebar 赤 dot → 手動 respawn |
+| `mcp_call timeout` | `restart` / `vp restart-all` |
+| `wire_*` が動かない | runtime 起動確認（`vp app start` → sidebar expand）、wire address を再確認（`agent@<repo>` / `agent@<repo>/<name>`） |
 | command msg が何度も nudge される | 受信側が `wire_ack` を忘れている |
-| 1 lane に claude session が 2 つ並走 (二重 dispatch) | v0.45 で根治 (create の reservation が同 addr の並行 create を reject)。 v0.44 以前なら VP を更新 |
+| lane address が「見つからない」 | `/performer/` セグメントを付けていないか確認（v0.56+ は `<repo>/<name>`） |
+| `stand` パラメータが弾かれる | `agent` に改名済み（値 `echoes` → `claude`） |
+| `read_pane` / `list_canvas` / `capture_canvas` が無い | `read_board` / `capture_window` に統合・改名済み |
+| `editor_*` / `layout_*` が失敗する | **vp-app 稼働が前提**（`vp app start`） |
+| `update` が id エラーで落ちる | 仕様（未知 id は loud fail）。`read_board` で id を取り直す |
 
 ---
 
-## 使用例 (詳細)
-
-### flow_handoff (推奨 handoff)
-
-```typescript
-mcp__vantage-point__flow_handoff({
-  name: "feat-api",
-  task_spec: "# Task\nImplement API endpoint X",
-  mode: "auto",
-  branch: "mako/feat-api"
-})
-```
-
-### flow_progress (並列追跡)
-
-```typescript
-mcp__vantage-point__flow_progress()
-// → performers[].flow_state, control_surrender, performer_status, unread_wire_count
-```
-
-### delegate (単発委譲)
-
-```typescript
-mcp__vantage-point__delegate({
-  doer: "agent@vantage-point/feat-api",
-  task: "Fix the failing test in src/api.rs. Report result via complete()."
-})
-// → delegation id。 turn を park し、 doer の complete で再開
-```
-
-### Canvas pane を memory に保存
-
-```typescript
-mcp__vantage-point__list_canvas()
-mcp__vantage-point__read_pane({ pane_id: "main" })
-// → creo-memories remember に流す
-```
-
----
-
-## 関連 memory (詳細設計)
-
-- VP Roadmap Phase 5→9 (`mem_1CaVeQEKXd8U2XHn75RD4M`)
-- Mental model 舞台-役者-演目 (`mem_1CaVnfJRgWtuRgZD9yQSoV`)
-- Hub federation 仕様 (`mem_1CaVeTysipdgVHoxwxUcPj`)
-- 4 scope architecture (`mem_1CaSugEk1W2vr5TAdfDn5D`)
-- dev-flow overview (`mem_1CbUUzvguCptQPU4eWTKHx`)
-- wire address spec — `agent@<project>` (conductor) / `agent@<project>/<performer>`、`canvas@<project>/<performer>`、`notify@<project>` 等
-
----
-
-## 開発・dogfooding tip (maintainer 向け)
+## 開発・dogfooding tip（maintainer 向け）
 
 - GUI 変更の実機確認は `mise run app:swap`（DRY build → `/Applications/VantagePoint.app` 差し替え → 起動）
-- log は XDG state zone: `~/.local/state/vp/log/`（旧 `~/Library/Logs/Vantage/` は撤去済み）
-- daemon 再起動は 2 種: `vp daemon stop` = gentle（SP 温存）/ cascade（daemon + SP 全停止）— lane 内から検証する時は gentle 側
+- log は XDG state zone: `~/.local/state/vp/log/`
+- daemon 再起動は 2 種: `vp daemon stop` = gentle（repo runtime 温存）/ cascade（全停止）。lane 内から検証するときは gentle 側
+- サブタスクの切れ目で `vp now` を打つと、session の「今なにを」が 1 行で board / sidebar に残る
 
 ---
 
 ## 関連
 
-- **dev-flow skill**: `skills/dev-flow/SKILL.md` — Conductor × Performer orchestration 6 phase
-- **詳細リファレンス**: `reference/mcp-tools.md`
+- **dev-flow skill**: `skills/dev-flow/SKILL.md` — 並列 orchestration の 6 phase
+- **詳細リファレンス**: `reference/mcp-tools.md` — 26 tool の完全な param
 - **VP リポジトリ**: https://github.com/chronista-club/vantage-point
+- 関連 memory: mental model（`mem_1CaVnfJRgWtuRgZD9yQSoV`）/ dev-flow overview（`mem_1CbUUzvguCptQPU4eWTKHx`）/ 命名エピック台帳（`mem_1CdQxvayZBB3E768g1mDbQ`）
