@@ -5,7 +5,7 @@ Claude Code plugin for AI-native development — board visualization, parallel l
 ## Features
 
 - **board 🧭** — Markdown / HTML / log / URL を貼る台。item は id を持ち、`update` で書き換えられる
-- **lane** — 作業台（cwd / branch / board / layout を持つ checkout）。`root` + 並列 lane（`vp lane`, `add_performer`）
+- **lane** — 作業台（cwd / branch / board / layout を持つ checkout）。`root` + 並列 lane（`vp lane`, `add_sub`）
 - **wire** — repo 跨ぎ inter-agent 通信（`wire_send` / `wire_recv` / `wire_inbox` / `wire_ack` / `wire_thread`）
 - **dev-flow primitives** — `flow_handoff` / `flow_progress` で並列 orchestration
 - **GUI live tuning** — `editor_*` / `layout_*` で AI が GUI を直接調律（HITL ループ）
@@ -51,7 +51,7 @@ JoJo 由来の愛称は VP v0.56 で全廃され、機能名へ移行しまし�
 | Echoes | **conversation** |
 | Stand | **agent** / component / service |
 
-lane address は **`<repo>/root` / `<repo>/<name>`**（`/performer/` セグメントは撤去）。`root` は役割ではなく予約名で、`LaneKind` は撤去済み — **lane は全て対等**です。
+lane address は **`<repo>/root` / `<repo>/<name>`**（`/Sub/` セグメントは撤去）。`root` は役割ではなく予約名で、`LaneKind` は撤去済み — **lane は全て対等**です。
 
 ## Commands
 
@@ -82,8 +82,8 @@ lane address は **`<repo>/root` / `<repo>/<name>`**（`/performer/` セグメ�
 
 | ツール | 説明 |
 |--------|------|
-| `add_performer` / `delete_performer` | lane の作成・削除（`agent` / `base` / `model` 指定可） |
-| `list_lanes` | lane 一覧（`performer_status` / `mailbox_addresses` / `repo_addresses`） |
+| `add_sub` / `delete_sub` | lane の作成・削除（`agent` / `base` / `model` 指定可） |
+| `list_lanes` | lane 一覧（`sub_status` / `mailbox_addresses` / `repo_addresses`） |
 
 > lane への text 注入・console 読取・ファイル監視は CLI のみ: `vp lane nudge` / `vp lane capture` / `vp file watch`
 
