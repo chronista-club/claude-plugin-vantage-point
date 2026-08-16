@@ -65,7 +65,7 @@ GUI 容器 = Pane（app 専用語）。部品 = component / 常駐 = service。�
 | カテゴリ | ツール | 数 |
 |----------|--------|---|
 | Board | `show`, `clear`, `read_board`, `update`, `capture_window`, `switch_lane` | 6 |
-| Lane | `add_performer`, `delete_performer`, `list_lanes` | 3 |
+| Lane | `add_sub`, `delete_sub`, `list_lanes` | 3 |
 | dev-flow | `flow_handoff`, `flow_progress` | 2 |
 | wire | `wire_send`, `wire_recv`, `wire_inbox`, `wire_ack`, `wire_thread` | 5 |
 | Delegation | `delegate`, `complete`, `respond` | 3 |
@@ -168,10 +168,10 @@ CLI pair: `vp shot`（**CLI が上位互換**: `--region sidebar|main|full` / `-
 
 ```typescript
 mcp__vantage-point__switch_lane({ lane: "root" })      // 開発起点 lane
-mcp__vantage-point__switch_lane({ lane: "feat-api" })  // performer lane
+mcp__vantage-point__switch_lane({ lane: "feat-api" })  // Sub lane
 ```
 
-`lane` は lane token: **`root`** または performer 名。
+`lane` は lane token: **`root`** または Sub 名。
 
 > 人間の view を無断で切り替えないこと（ROTO / CLI 駆動の view 制御向け）。
 
@@ -181,12 +181,12 @@ CLI pair: `vp lane switch <name>`
 
 ## Lane
 
-### add_performer
+### add_sub
 
-performer lane を作成（lane clone + spawn）。cwd から repo を解決します。
+Sub lane を作成（lane clone + spawn）。cwd から repo を解決します。
 
 ```typescript
-mcp__vantage-point__add_performer({
+mcp__vantage-point__add_sub({
   name: "feat-api",
   branch: "mako/feat-api",   // 省略時 `<git-user>/<sanitized-name>` を auto-derive
   agent: "claude",           // claude(default) / codex / grok / opencode / shell
@@ -197,22 +197,22 @@ mcp__vantage-point__add_performer({
 
 | パラメータ | 型 | 必須 | 説明 |
 |-----------|-----|------|------|
-| `name` | string | ✓ | performer 名（短い slug）。lane address の `<name>` 部分 |
+| `name` | string | ✓ | Sub 名（短い slug）。lane address の `<name>` 部分 |
 | `branch` | string | - | 省略時 server が `git config user.name` から auto-derive |
 | `agent` | string | - | **engine**: `claude`（default）/ `codex` / `grok` / `opencode` / `shell` |
-| `base` | string | - | 分岐元 ref。**未 push の local branch も可**（root の feature branch 上の未 merge 土台を配れる）。省略時 `performer-files.kdl` の base-ref → `origin/HEAD` → `main` |
+| `base` | string | - | 分岐元 ref。**未 push の local branch も可**（root の feature branch 上の未 merge 土台を配れる）。省略時 `sub-files.kdl` の base-ref → `origin/HEAD` → `main` |
 | `model` | string | - | claude model alias（`opus` / `sonnet` / `haiku` / `claude-fable-5`）。省略時は config の `default-lane-model`、無記録なら engine 側の user 既定 |
 
 > ⚠️ **`stand` パラメータは `agent` に改名され、値 `echoes` は `claude` になりました**（v0.56 命名エピック 6/9）。`agent` は engine の選択であり、**engine は働き手の不変属性**です（engine を替える操作は存在しない — 会話の文脈は engine 間を移動できないため。乗り換えたければ新しい lane を立てる）。
 
 CLI pair: `vp lane new <name> <branch> [--isolation worktree|clone] [--base <ref>] [--model <alias>]`（`--isolation` は CLI のみ）
 
-### delete_performer
+### delete_sub
 
 repo pool removal + child PTY kill + tmux session kill + workspace dir cleanup を 1 call で完結。
 
 ```typescript
-mcp__vantage-point__delete_performer({
+mcp__vantage-point__delete_sub({
   name: "feat-api",
   cleanup: true   // default true。false で dir 残置（debug / forensic）
 })
@@ -226,12 +226,12 @@ CLI pair: `vp lane rm <name>`
 
 ```typescript
 mcp__vantage-point__list_lanes({
-  kind: "performer",   // "root" | "performer"（省略時 両方）
+  kind: "sub",   // "root" | "sub"（省略時 両方）
   state: "running"     // running | spawning | exiting | dead（省略時 全状態）
 })
 ```
 
-**各 lane の戻り値**: `address`, `kind`, `state`, `agent`, `pid`, `cwd`, tmux session, `performer_status`, `mailbox_addresses`
+**各 lane の戻り値**: `address`, `kind`, `state`, `agent`, `pid`, `cwd`, tmux session, `sub_status`, `mailbox_addresses`
 
 - `mailbox_addresses.agent` — その lane の会話 inbox（例: `agent@vantage-point/feat-api`）
 - `mailbox_addresses.board` — その lane の board inbox（例: `board@vantage-point/feat-api`）
@@ -248,7 +248,7 @@ CLI pair: `vp lane ls --detail`
 
 ### flow_handoff
 
-**(1)** performer lane 作成 → **(2)** task_spec を `wire_send`（= thread root）→ **(3)** nudge、を atomic 実行。失敗時は performer 削除で rollback。
+**(1)** Sub lane 作成 → **(2)** task_spec を `wire_send`（= thread root）→ **(3)** nudge、を atomic 実行。失敗時は Sub 削除で rollback。
 
 ```typescript
 mcp__vantage-point__flow_handoff({
@@ -267,13 +267,13 @@ CLI pair: `vp flow handoff <name> --task-spec <file|-> [--mode auto|hitl] [--bra
 
 ### flow_progress
 
-全 lane（root + performers）の `performer_status`（git ahead/behind/dirty/merged）と per-lane 未読 wire 数を 1 view で返す read-only 集約。cursor は触りません。
+全 lane（root + Subs）の `sub_status`（git ahead/behind/dirty/merged）と per-lane 未読 wire 数を 1 view で返す read-only 集約。cursor は触りません。
 
 ```typescript
 mcp__vantage-point__flow_progress()
 ```
 
-**各 lane の戻り値**: `performer_status`, `unread_wire_count`, `flow_state`, `control_surrender`, `state_reason`, `last_state_transition_at`
+**各 lane の戻り値**: `sub_status`, `unread_wire_count`, `flow_state`, `control_surrender`, `state_reason`, `last_state_transition_at`
 
 `flow_state` は 6 state（server 側で derive）:
 
@@ -525,8 +525,8 @@ VP は「同じ logic を MCP（AI 用）と CLI（人間用）の両方から e
 | `clear` | `vp pane clear` |
 | `capture_window` | `vp shot`（CLI が上位互換） |
 | `switch_lane` | `vp lane switch` |
-| `add_performer` | `vp lane new` |
-| `delete_performer` | `vp lane rm` |
+| `add_sub` | `vp lane new` |
+| `delete_sub` | `vp lane rm` |
 | `list_lanes` | `vp lane ls --detail` |
 | `flow_handoff` | `vp flow handoff` |
 | `flow_progress` | `vp flow progress` |
@@ -559,7 +559,7 @@ VP は「同じ logic を MCP（AI 用）と CLI（人間用）の両方から e
 
 ### `list_lanes` vs `vp ps` vs `vp lane ls`
 
-- **`list_lanes`** — 現 repo の全 lane（root + performers）。`performer_status` / `mailbox_addresses` 付き
+- **`list_lanes`** — 現 repo の全 lane（root + Subs）。`sub_status` / `mailbox_addresses` 付き
 - **`vp ps`** — daemon 配下の全 repo runtime 一覧
 - **`vp lane ls`** — fs scan の簡易表示（runtime 不要）
 - **`vp lane ls --detail`** — `list_lanes` の CLI pair（runtime 稼働中のみ）
@@ -638,7 +638,8 @@ mcp__vantage-point__capture_window({ path: "/tmp/vp.png" })
 | `list_lanes` の `kind: "conductor"` | **`kind: "root"`** |
 | `mailbox_addresses.canvas` | **`mailbox_addresses.board`** |
 | lane address `<repo>/conductor` / `<repo>/performer/<name>` | **`<repo>/root` / `<repo>/<name>`** |
-| `add_wing` / `add_worker` / `delete_wing` | `add_performer` / `delete_performer` |
+| `add_wing` / `add_worker` / `delete_wing` | `add_performer` / `delete_performer`（当時） |
+| `add_performer` / `delete_performer` / `performer_status` / `kind: "performer"` | **`add_sub` / `delete_sub` / `sub_status` / `kind: "sub"`**（Main/Sub 語彙、2026-08-16） |
 | `tmux_split` / `tmux_capture` / `tmux_dashboard` / `tmux_agent_*` | `vp lane nudge` / `vp lane capture` |
 | `open_canvas` / `close_canvas` / `split_pane`（MCP） | vp-app 常駐 board + `vp pane split` |
 | `toggle_pane` / `close_pane` / `watch_file` / `unwatch_file` / `port_*` / `permission`（MCP） | CLI へ集約（`vp pane` / `vp file` / `vp port`） |

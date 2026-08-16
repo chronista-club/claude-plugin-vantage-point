@@ -6,7 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## 0.22.0 (2026-08-16)
+
+- docs: 語彙を **Main/Sub** へ全面同期（VP #1003 と対）— `performer` → `sub`（`add_sub` / `delete_sub` / `sub_status` / `kind: "sub"`）、表記は Main lane / Sub。識別子（予約名 `root`、wire address）は不変
+- 移行表に performer → sub 段を追記。歴史記述（旧 address 形・旧 `LaneKind`）は当時の語のまま維持
+
+
 ## [Unreleased]
+
+## [0.21.1] - 2026-07-28
+
+### Fixed
+
+- **「1 lane に session が 0..N 枚座る」を未実装として書いていた誤りを訂正**。v0.21.0 は doc 54 の Status 行「実装未着手」を根拠に、このモデルを「起草段階」として 1 行注記に留めていた。実際には **doc 54 が語彙と identity 層を設計する前に、モデルの物理は doc 46 P5 / A5-2 で先に実装済み**だった（Status 行が指していたのは doc 54 固有の schema 束）。実装の証跡:
+  - `LanePool` の `pty_slots` / `term_attaches` / `chat_engines` はいずれも **`(lane, session)` の 2 段 map**（`crates/vantage-point/src/repo/lanes_state.rs`）
+  - 「旧実装は lane に 1 本だったため『tui になれるのは root session だけ』という制約があったが、それは lane の性質ではなく **slot の枚数**が作っていた制約だった」（同ファイルのコメント）
+  - CLI `vp lane slots` / `slot-new` / `slot-close`（VP 本体 PR #916）
+  - `root` が特別なのは **lane の代表**（mailbox / pid / Dead 判定 / 省略時の解決先）である点だけで、「端末を持てるのは root だけ」という制約は既に無い
+- `skills/vantage-point/SKILL.md`（v0.21.1）: architecture 図に slot 層を追加し、「**1 lane = 1 session ではない**」節を新設（3 つの入れ物の粒度 / root = 代表の意味 / `vp lane slots` 系の CLI / slot 操作は MCP に無く `list_lanes` も現状 lane 粒度であること）。未実装として残るのは **worker identity 層**（VP 発行 id の永久欠番 / 代表の自動継承と空位許容）で、現状の session 鍵は `SessionKey`（lane 内の小整数、Reset で再利用）である旨に注記を差し替え
+- `skills/dev-flow/SKILL.md`（v0.4.1）: 「lane = worktree + **独立した** agent session の合成体」という 1 session 前提の表現を訂正し、slot が 0..N 枚座ること・root session が代表を担うことを明記
+- CLI 一覧の `vp lane slots` 系の説明に「1 lane に session を複数座らせる」意義を追記
 
 ## [0.21.0] - 2026-07-27
 

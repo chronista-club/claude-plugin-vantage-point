@@ -1,7 +1,7 @@
 ---
 name: dev-flow
-description: VP の lane orchestration による並列開発フロー — hearing → 議論 → spec memory → handoff → 並列追跡 → merge の 6 phase。「並列開発」「handoff」「lane」「並列 lane」「control surrender」「dev flow」「performer」等のキーワードで invoke
-version: 0.4.0
+description: VP の lane orchestration による並列開発フロー — hearing → 議論 → spec memory → handoff → 並列追跡 → merge の 6 phase。「並列開発」「handoff」「lane」「並列 lane」「control surrender」「dev flow」「Sub」等のキーワードで invoke
+version: 0.4.1
 tags:
   - dev-flow
   - orchestration
@@ -31,17 +31,17 @@ tags:
 これは dev-flow にとって破壊ではなく **純化**です。旧モデルは「Conductor という役割」と「control surrender という関係」を二重に持っていました。役割側が消えたことで、**control の所在だけが唯一の役割表現**になります。
 
 ```
-❌ 旧: 「Conductor lane」と「Performer lane」という 2 種類の存在がいる
+❌ 旧: 「Conductor lane」と「Sub lane」という 2 種類の存在がいる
 ✅ 新: lane は全て対等。「今どの lane が control を握っているか」という関係だけがある
 ```
 
 実務上の帰結:
 
-- **orchestrate しているのは lane ではなく、その時点で control を握っている側** — root lane が常に orchestrator とは限らない。performer が別の lane に handoff することもできる
+- **orchestrate しているのは lane ではなく、その時点で control を握っている側** — root lane が常に orchestrator とは限らない。Sub が別の lane に handoff することもできる
 - **役割は固定されない** — control は surrender（手放す）と grab（握り直す）を繰り返す。それが orchestration そのもの
-- **address に役割は現れない** — `<repo>/root` も `<repo>/feat-api` も同じ形。`/performer/` セグメントは撤去済み
+- **address に役割は現れない** — `<repo>/root` も `<repo>/feat-api` も同じ形。`/Sub/` セグメントは撤去済み
 
-> ⚠️ ただし `add_performer` / `flow_handoff` という **tool 名には performer が残っています**。これは「新しい lane を作って仕事を渡す」という**動詞**であって、作られた lane が特別な種族になるわけではありません。
+> ⚠️ ただし `add_sub` / `flow_handoff` という **tool 名には Sub が残っています**。これは「新しい lane を作って仕事を渡す」という**動詞**であって、作られた lane が特別な種族になるわけではありません。
 
 ---
 
@@ -56,7 +56,8 @@ tags:
 
 ### 2. handoff 先 lane は分解された task の実装主体
 
-- lane-clone された worktree + 独立した agent session の合成体
+- lane-clone された worktree + そこに座る agent session の合成体
+- **1 lane = 1 session ではない**（doc 46 P5）。session（slot）は 0..N 枚座れ、`vp lane slot-new` で増やせる。root session が **lane の代表**（wire の読み手 / pid / Dead 判定 / 省略時の解決先）を担う
 - **auto mode**: spec を 1 回渡して自走、完了報告で初回 interaction
 - **HITL mode**: 進捗 / blocker / 判断で thread 対話
 - question wire が飛んだら自動的に HITL へ shift する escalation
@@ -116,7 +117,7 @@ lane が対等になった今、**これが唯一の役割表現**です:
 
 ### derive の入口
 
-`flow_progress`（MCP `mcp__vantage-point__flow_progress` / CLI `vp flow progress`）が各 lane に `flow_state` / `control_surrender` / `state_reason` / `last_state_transition_at` / `performer_status` / `unread_wire_count` を返します。read-only で cursor は触りません。
+`flow_progress`（MCP `mcp__vantage-point__flow_progress` / CLI `vp flow progress`）が各 lane に `flow_state` / `control_surrender` / `state_reason` / `last_state_transition_at` / `sub_status` / `unread_wire_count` を返します。read-only で cursor は触りません。
 
 ### wire msg `kind` taxonomy（state derivation の入力）
 
@@ -195,12 +196,12 @@ lane を作るとき `agent` param で engine を選べます:
 |---|---|---|
 | `flow_handoff` / `vp flow handoff` | handoff | lane 作成 + `wire_send` + nudge を atomic（失敗時 rollback） |
 | `flow_progress` / `vp flow progress` | state | 全 lane の git status + 未読 wire + `flow_state` / `control_surrender` 集約 |
-| `add_performer` / `vp lane new` | lane 作成 | worktree + agent spawn（handoff を使わない低レベル操作） |
+| `add_sub` / `vp lane new` | lane 作成 | worktree + agent spawn（handoff を使わない低レベル操作） |
 | `wire_send` / `vp wire send` | message | thread 化 inter-agent msg（`reply_to` で chain、`body.category` で delivery policy） |
 | `wire_recv` / `vp wire recv` | message | 未読取得（cursor 前進） |
 | `wire_inbox` / `vp wire inbox` | message | 未読数だけ（cursor 不触り、P5 の軽量ポーリング向け） |
 | `wire_ack` / `vp wire ack` | message | `category: command` の受領確認（**処理後**に打つ） |
-| `list_lanes` / `vp lane ls --detail` | routing | lane 一覧 + `performer_status` / `mailbox_addresses` |
+| `list_lanes` / `vp lane ls --detail` | routing | lane 一覧 + `sub_status` / `mailbox_addresses` |
 | `vp lane nudge`（**CLI のみ**） | nudge | lane の agent / shell に text + Enter を注入 |
 | `show` / `update` / `read_board` | view | board に構想 / 進捗を可視化。**進捗表は `update` で 1 枚を書き換える** |
 | `mcp__creo-memories__remember` | persist | memory trail（atlas + tags + supersedes） |
@@ -259,7 +260,7 @@ vp lane nudge <repo>/<slug> \
 ### C. 並列追跡
 
 ```
-mcp__vantage-point__flow_progress    → flow_state / control_surrender / performer_status / unread_wire_count
+mcp__vantage-point__flow_progress    → flow_state / control_surrender / sub_status / unread_wire_count
 mcp__vantage-point__wire_inbox       → 未読数だけ軽量確認（cursor 不触り）
 mcp__vantage-point__wire_recv        → question / 完了報告の本文取得
 mcp__vantage-point__wire_ack         → command msg を処理した後に ack
@@ -304,7 +305,7 @@ mcp__vantage-point__wire_send
 
 | 症状 | 原因 / 対処 |
 |---|---|
-| lane address が解決しない | `/performer/` を付けている。v0.56+ は `<repo>/<name>` |
+| lane address が解決しない | `/Sub/` を付けている。v0.56+ は `<repo>/<name>` |
 | `stand` param が弾かれる | `agent` に改名（値 `echoes` → `claude`） |
 | command msg が何度も nudge される | 受信側が `wire_ack` を忘れている（**受信 ≠ ack**） |
 | `flow_progress` が古い値を返す | read-only cache。最新は `wire_recv` 側で確認 |
