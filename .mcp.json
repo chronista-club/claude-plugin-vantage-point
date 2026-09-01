@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "vantage-point": {
+      "command": "vp",
+      "args": ["mcp"]
+    }
+  }
+}

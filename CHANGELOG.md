@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## 0.23.0 (2026-09-01)
+
+- feat: **`.mcp.json` を追加** — プラグインが `vp mcp` を stdio MCP サーバとして宣言する。これまで **VP プラグインを入れても MCP ツールは付いてこなかった**（commands / skills / hooks のみ）。mako 環境で `mcp__vantage-point__*` が使えていたのは個人の共有 config store が宣言を肩代わりしていたためで、他の環境では再現しなかった。`{"command": "vp", "args": ["mcp"]}` は個人パスを含まずポータブル。`.mcp.json` はプラグインルートの MCP 自動検出位置で、公式に推奨される宣言方式（plugin-dev `mcp-integration` の Method 1）。既存 2 プラグイン（creo-memories = http / team-bucciarati = バイナリ同梱）と同じ `mcpServers` 形式に揃えた
+- docs: README に「MCP サーバの宣言」節を追加。Requirements を「インストール済み」から「**PATH にある**こと」に精緻化し、brew cask のインストールコマンドを明記。**`vp` が PATH に無い環境ではセッションごとに接続エラーが出る**というトレードオフも明示した（バイナリ配布と MCP 宣言は別レイヤーで、VP は Rust + WebView の GUI アプリのためクラウド化もバイナリ同梱も採れない）
+- 検証: `vp mcp` が MCP `initialize` に正しく応答することを実測（`rmcp 1.8.0`、exit=0）
+- 依頼元: `agent@claude-plugin-chronista-style` からの wire handoff（claude-plugins PR #11 で DEVELOPMENT.md に事実として記録済み）
+
 ## 0.22.0 (2026-08-16)
 
 - docs: 語彙を **Main/Sub** へ全面同期（VP #1003 と対）— `performer` → `sub`（`add_sub` / `delete_sub` / `sub_status` / `kind: "sub"`）、表記は Main lane / Sub。識別子（予約名 `root`、wire address）は不変
