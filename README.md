@@ -14,8 +14,27 @@ Claude Code plugin for AI-native development — board visualization, parallel l
 
 ## Requirements
 
-- Vantage Point CLI (`vp`) **v0.57+** がインストール済み
+- Vantage Point CLI (`vp`) **v0.57+** が **PATH にある**こと
+
+  ```bash
+  brew install --cask chronista-club/tap/vantage-point
+  ```
+
 - repo runtime が未起動でも MCP ツール呼び出し時に自動起動
+
+## MCP サーバの宣言
+
+本プラグインはリポジトリ直下の `.mcp.json` で MCP サーバを宣言します。**プラグインを入れれば `mcp__vantage-point__*` が使えます**（別途の手動設定は不要）。
+
+```json
+{
+  "mcpServers": {
+    "vantage-point": { "command": "vp", "args": ["mcp"] }
+  }
+}
+```
+
+> ⚠️ **`vp` が PATH に無い環境ではセッションごとに接続エラーが出ます。** バイナリ配布（brew）と MCP 宣言は別レイヤーで、VP は Rust + WebView の GUI アプリのため creo-memories 方式（クラウド）も team-bucciarati 方式（バイナリ同梱）も採れません。「brew で本体を入れ、プラグインが宣言する」が構造上の前提です。
 
 ## Installation
 
