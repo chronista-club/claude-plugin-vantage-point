@@ -1,3 +1,10 @@
+> **保守終了・アーカイブ（2026-09-07）**
+>
+> このリポジトリの保守は終了しました。今後の開発・更新は [plugin-vantage-point](https://github.com/chronista-club/plugin-vantage-point) で行います。
+> 導入・移行方法は [新カタログ chronista-plugins](https://github.com/chronista-club/chronista-plugins#旧配布先からの移行) を参照してください。
+> 旧・新カタログの marketplace 名は同じ `chronista-plugins` です。旧登録を利用中の場合は、設定を退避したうえで旧登録を解除し、新カタログから再導入してください。
+> 以下は保守終了時点の記録です。
+
 # Vantage Point Plugin
 
 Claude Code plugin for AI-native development — board visualization, parallel lanes, wire inter-agent communication, dev-flow orchestration, and GUI live tuning.
